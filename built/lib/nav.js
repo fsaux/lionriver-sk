@@ -1,12 +1,13 @@
-var geolib = require('geolib');
-var geoutils = require('geolocation-utils');
-var _a = require('./instrument'), ScalarInstrument = _a.ScalarInstrument, VectorInstrument = _a.VectorInstrument;
-module.exports.calc = function (app, primitives, derivatives) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.calc = void 0;
+var instrument_1 = require("./instrument");
+function calc(app, primitives, derivatives) {
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
-        if (inst instanceof ScalarInstrument)
+        if (inst instanceof instrument_1.ScalarInstrument)
             inst.val = app.getSelfPath(inst.path);
-        if (inst instanceof VectorInstrument) {
+        if (inst instanceof instrument_1.VectorInstrument) {
             var newObj = {
                 mod: app.getSelfPath(inst.mpath),
                 ang: app.getSelfPath(inst.apath)
@@ -14,4 +15,6 @@ module.exports.calc = function (app, primitives, derivatives) {
             inst.val = newObj;
         }
     });
-};
+}
+exports.calc = calc;
+;

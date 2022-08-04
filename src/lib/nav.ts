@@ -1,8 +1,8 @@
-const geolib = require('geolib')
-const geoutils = require('geolocation-utils');
-const { ScalarInstrument, VectorInstrument } = require('./instrument');
+import * as geolib from "geolib";
+import * as geoutils from "geolocation-utils";
+import { ScalarInstrument, VectorInstrument } from "./instrument";
 
-module.exports.calc = function (app, primitives, derivatives){
+export function calc(app, primitives, derivatives){
 
     // Get primitives
     Object.values(primitives).forEach( (inst) => {
