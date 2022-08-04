@@ -1,16 +1,19 @@
 
-export class ScalarInstrument {
-    path: string;           //SignalK path
-    window: number;         //Averaging moving window size
-    private avgVal: number;         //Average value over window time
-    private valList: number[];      //List of last values over window time
-    private lastUpdate: number;     //Time of last valid update received
+
+export abstract class Instrument<T> {
+    path: string[];             //SignalK path
+    window: number;             //Averaging moving window size
+    timeout: number;            //Data invalidation timeout
+    protected avgVal: T;        //Average value over window time
+    protected valList: T[];     //List of last values over window time
+    protected lastUpdate: number;     //Time of last valid update received
 
     constructor(path: string, window: number){
-        this.path = path;
+        this.path  = [path];
         this.window = window;
         this.avgVal = null;
         this.valList = [];
+        this.timeout = 60*1000;     // Set default timeout to 1 minute
     }
 
     get val()  {
@@ -28,14 +31,28 @@ export class ScalarInstrument {
 
         const deltaT=Date.now()-this.lastUpdate;
 
-        if(deltaT > 0 && deltaT < this.window*1000)
+        if(deltaT < this.timeout*1000)
             this.avgVal=this.calcAvg();
         else
             this.avgVal=null;
     }
 
-    private calcAvg():number  {
+    abstract calcAvg():T;
+}
+
+export class LinearInstrument extends Instrument<number>{
+
+    calcAvg()  {
         return this.valList.reduce((a, b) => a + b, 0) / this.valList.length;
+    }
+}
+
+export class AngularInstrument extends Instrument<number>{
+
+    calcAvg()  {
+        const x= this.valList.reduce((a, b) => a + Math.cos(b), 0);
+        const y= this.valList.reduce((a, b) => a + Math.sin(b), 0);
+        return Math.atan2(y,x);
     }
 }
 
@@ -44,24 +61,11 @@ interface Vector{
     ang: number;
 }
 
-export class VectorInstrument {
-    mpath: string;          // Vector modulus path
-    apath: string;          // Vecotr angle path
-    private window: number;         //Averaging moving window size
-    private avgVal: Vector;         //Average value over window time
-    private valList: Vector[];      //List of last values over window time
-    private lastUpdate: number;     //Time of last valid update received
+export class VectorInstrument extends Instrument<Vector>{
 
     constructor( mpath: string, apath: string, window: number){
-        this.mpath = mpath;
-        this.apath = apath;
-        this.window = window;
-        this.avgVal = null;
-        this.valList = [];
-    }
-
-    get val():Vector {
-        return this.avgVal;
+        super(mpath,window);
+        this.path.push(apath);
     }
 
     set val(newval: any){
@@ -78,15 +82,27 @@ export class VectorInstrument {
 
         const deltaT=Date.now()-this.lastUpdate;
 
-        if(deltaT > 0 && deltaT < this.window*1000)
+        if(deltaT < this.timeout*1000)
             this.avgVal=this.calcAvg();
         else
             this.avgVal=null;
     }
 
-    private calcAvg(): Vector {
+    calcAvg() {
         const x = this.valList.reduce((a, b) =>  a + b.mod*Math.cos(b.ang) , 0);
         const y = this.valList.reduce((a, b) =>  a + b.mod*Math.sin(b.ang) , 0);
         return {mod: Math.sqrt(x*x+y*y) / this.valList.length ,ang: Math.atan2(y,x)};
+    }
+}
+
+interface Position{
+    longitude: number;
+    latitude: number;
+}
+
+export class PositionInstrument extends Instrument<Position>{
+
+    calcAvg()  {
+        return this.valList[this.valList.length-1];
     }
 }
