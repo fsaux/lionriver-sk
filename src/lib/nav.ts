@@ -20,25 +20,34 @@ export function calc(app, primitives, derivatives){
     // Calculate derivatives
     const currentTime:string = new Date(Date.now()).toISOString();
 
-    var distance= null;
-    var bearing= null;
+    var dst= null;
+    var brg= null;
+    var xte= null;
+    var legbrg= null;
+    var vmgwpt= null;
+    var sog= primitives.vectorOverGround.val.mod;
+    var cog= primitives.vectorOverGround.val.ang;
 
     if(primitives.position.val && primitives.nextWptPos.val){
-        distance = geolib.getDistance(primitives.position.val, primitives.nextWptPos.val);
-        bearing = geolib.getGreatCircleBearing(primitives.position.val, primitives.nextWptPos.val) * Math.PI / 180;
+        dst = geolib.getDistance(primitives.position.val, primitives.nextWptPos.val);
+        brg = geolib.getGreatCircleBearing(primitives.position.val, primitives.nextWptPos.val) * Math.PI / 180;
+        if(primitives.prevWptPos.val){
+            legbrg = geolib.getGreatCircleBearing(primitives.prevWptPos.val, primitives.nextWptPos.val) * Math.PI / 180;
+            xte= Math.asin(Math.sin(dst/ 6371000)* Math.sin(brg - legbrg)) * 6371000;
+        }
+        if(sog && cog)
+            vmgwpt= sog * Math.cos(cog - brg);
     }
  
-    derivatives.distanceToWpt.val={value: distance, timestamp: currentTime};
-    derivatives.bearingToWpt.val={value: bearing, timestamp: currentTime};
+    derivatives.distanceToWpt.val={value: dst, timestamp: currentTime};
+    derivatives.bearingToWpt.val={value: brg, timestamp: currentTime};
+    derivatives.crossTrackError.val={value: xte, timestamp: currentTime};
+    derivatives.vmgtoWpt.val={value: vmgwpt, timestamp: currentTime};
 
-    app.debug(derivatives.distanceToWpt);
-    app.debug(derivatives.bearingToWpt);
+    app.debug(derivatives.vmgtoWpt.val);
+
     //app.debug(distance);
     //app.debug(currentTime);
 
-
-
-
-        
 
 };

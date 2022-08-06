@@ -29,7 +29,7 @@ var Instrument = /** @class */ (function () {
             return this.avgVal;
         },
         set: function (newval) {
-            if (newval) {
+            if (newval.value) {
                 this.lastUpdate = Date.parse(newval.timestamp);
                 this.valList.push(newval.value);
             }
@@ -79,8 +79,11 @@ var VectorInstrument = /** @class */ (function (_super) {
         return _this;
     }
     Object.defineProperty(VectorInstrument.prototype, "val", {
+        get: function () {
+            return this.avgVal;
+        },
         set: function (newval) {
-            if (newval.mod && newval.ang) {
+            if (newval.mod.value && newval.ang.value) {
                 var lu1 = Date.parse(newval.mod.timestamp);
                 var lu2 = Date.parse(newval.ang.timestamp);
                 this.lastUpdate = lu1 < lu2 ? lu1 : lu2;

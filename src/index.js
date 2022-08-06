@@ -29,6 +29,7 @@ module.exports = function (app) {
     distanceToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.distance',1),
     trackBearing: new LinearInstrument('navigation.courseGreatCircle.bearingTrackTrue',1),
     crossTrackError: new LinearInstrument('navigation.courseGreatCircle.crossTrackError',1),
+    vmgtoWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood',1),
     trueWind: new VectorInstrument(
       'environment.wind.speedTrue',
       'environment.wind.angleTrueWater',3)

@@ -4,7 +4,7 @@ export abstract class Instrument<T> {
     path: string[];             //SignalK path
     window: number;             //Averaging moving window size
     timeout: number;            //Data invalidation timeout
-    protected avgVal: T;        //Average value over window time
+    avgVal: T;        //Average value over window time
     protected valList: T[];     //List of last values over window time
     protected lastUpdate: number;     //Time of last valid update received
 
@@ -16,12 +16,12 @@ export abstract class Instrument<T> {
         this.timeout = 60*1000;     // Set default timeout to 1 minute
     }
 
-    get val()  {
+    get val():any  {
         return this.avgVal;
     }
 
     set val(newval: any){
-        if(newval){
+        if(newval.value){
             this.lastUpdate = Date.parse(newval.timestamp);
             this.valList.push(newval.value);
         }
@@ -68,13 +68,17 @@ export class VectorInstrument extends Instrument<Vector>{
         this.path.push(apath);
     }
 
+    get val():any  {
+        return this.avgVal;
+    }
+    
     set val(newval: any){
-        if(newval.mod && newval.ang){
+        if(newval.mod.value && newval.ang.value){
             const lu1 = Date.parse(newval.mod.timestamp);
             const lu2 = Date.parse(newval.ang.timestamp);
             this.lastUpdate = lu1 < lu2 ?lu1 :lu2;
 
-            this.valList.push({mod: newval.mod.value,ang: newval.ang.value});
+            this.valList.push({mod: newval.mod.value, ang: newval.ang.value});
         }
 
         if(this.valList.length > this.window)
