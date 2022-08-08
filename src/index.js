@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
 const nav = require('./lib/nav')
+const leeway = require('./lib/leeway')
 
 module.exports = function (app) {
   const plugin = {}
@@ -27,12 +28,14 @@ module.exports = function (app) {
   const derivatives = {
     bearingToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.bearingTrue', 1),
     distanceToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.distance', 1),
-    trackBearing: new LinearInstrument('navigation.courseGreatCircle.bearingTrackTrue', 1),
     crossTrackError: new LinearInstrument('navigation.courseGreatCircle.crossTrackError', 1),
-    vmgtoWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood', 1),
+    vmgToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood', 3),
     trueWind: new VectorInstrument(
       'environment.wind.speedTrue',
-      'environment.wind.angleTrueWater', 3)
+      'environment.wind.angleTrueWater', 3),
+    vmg: new LinearInstrument('performance.velocityMadeGood', 3),
+    twd: new LinearInstrument('environment.wind.directionTrue', 3),
+    leeway: new AngularInstrument('performance.leewayAngle', 3)
   }
 
   plugin.id = 'lionriver-sk'
@@ -46,8 +49,10 @@ module.exports = function (app) {
     Object.values(primitives).forEach((inst) => { inst.timeout = options.dataTimeout })
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
 
+    const leewayTable = new leeway.LeewayTable(leeway.myLwyTab, app)
+
     function doNavCalcs () {
-      nav.calc(app, primitives, derivatives)
+      nav.calc(app, primitives, derivatives, leewayTable)
       // app.debug(primitives);
     }
 

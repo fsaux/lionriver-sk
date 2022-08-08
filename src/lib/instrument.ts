@@ -20,9 +20,11 @@ export abstract class Instrument<T> {
   }
 
   set val (newval: any) {
-    if (newval.value) {
-      this.lastUpdate = Date.parse(newval.timestamp)
-      this.valList.push(newval.value)
+    if (newval) {
+      if (newval.value) {
+        this.lastUpdate = Date.parse(newval.timestamp)
+        this.valList.push(newval.value)
+      }
     }
 
     if (this.valList.length > this.window) { this.valList.shift() }
@@ -65,12 +67,14 @@ export class VectorInstrument extends Instrument<Vector> {
   }
 
   set val (newval: any) {
-    if (newval.mod.value && newval.ang.value) {
-      const lu1 = Date.parse(newval.mod.timestamp)
-      const lu2 = Date.parse(newval.ang.timestamp)
-      this.lastUpdate = lu1 < lu2 ? lu1 : lu2
+    if (newval.mod && newval.ang) {
+      if (newval.mod.value && newval.ang.value) {
+        const lu1 = Date.parse(newval.mod.timestamp)
+        const lu2 = Date.parse(newval.ang.timestamp)
+        this.lastUpdate = lu1 < lu2 ? lu1 : lu2
 
-      this.valList.push({ mod: newval.mod.value, ang: newval.ang.value })
+        this.valList.push({ mod: newval.mod.value, ang: newval.ang.value })
+      }
     }
 
     if (this.valList.length > this.window) { this.valList.shift() }
