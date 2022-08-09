@@ -35,7 +35,10 @@ module.exports = function (app) {
       'environment.wind.angleTrueWater', 3),
     vmg: new LinearInstrument('performance.velocityMadeGood', 3),
     twd: new LinearInstrument('environment.wind.directionTrue', 3),
-    leeway: new AngularInstrument('performance.leewayAngle', 3)
+    leeway: new AngularInstrument('performance.leewayAngle', 3),
+    drift: new VectorInstrument(
+      'environment.current.drift',
+      'environment.current.setTrue', 15)
   }
 
   plugin.id = 'lionriver-sk'
@@ -52,7 +55,9 @@ module.exports = function (app) {
     const leewayTable = new leeway.LeewayTable(leeway.myLwyTab, app)
 
     function doNavCalcs () {
-      nav.calc(app, primitives, derivatives, leewayTable)
+      const updObj = nav.calc(app, primitives, derivatives, leewayTable)
+      app.handleMessage(plugin.id, updObj)
+
       // app.debug(primitives);
     }
 

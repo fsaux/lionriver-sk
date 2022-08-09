@@ -52,7 +52,7 @@ var LeewayTable = /** @class */ (function () {
         var aref = this.leewayPoints[idx].Aref;
         var hf = aws * aws * (cd * Math.sin(awa) + cl * Math.cos(awa)) * aref;
         if (bspd !== 0) {
-            lwy = Math.asin(K * hf / bspd / bspd) * 180 / Math.PI;
+            lwy = Math.asin(K * hf / bspd / bspd);
         }
         else {
             lwy = 0;

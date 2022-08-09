@@ -4,7 +4,7 @@ import * as geoutils from 'geolocation-utils'
 import { Instrument, VectorInstrument } from './instrument'
 import { LeewayTable } from './leeway'
 
-export function calc (app, primitives, derivatives, leewayTable: LeewayTable) {
+export function calc (app, primitives, derivatives, leewayTable: LeewayTable): Object {
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
     if (inst instanceof VectorInstrument) {
@@ -38,7 +38,7 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable) {
     brg = geolib.getGreatCircleBearing(primitives.position.val, primitives.nextWptPos.val) * Math.PI / 180
     if (primitives.prevWptPos.val) {
       legbrg = geolib.getGreatCircleBearing(primitives.prevWptPos.val, primitives.nextWptPos.val) * Math.PI / 180
-      xte = Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000
+      xte = -Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000
     }
     if (sog && cog) { vmgwpt = sog * Math.cos(cog - brg) }
   }
@@ -77,6 +77,7 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable) {
       twd = twa + hdg
     }
     lwy = leewayTable.get(awa, aws, spd)
+    if (awa > Math.PI) { lwy = -lwy }
   }
 
   derivatives.trueWind.val = {
@@ -87,7 +88,47 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable) {
   derivatives.twd.val = { value: twd, timestamp: currentTime }
   derivatives.leeway.val = { value: lwy, timestamp: currentTime }
 
-  // app.debug(derivatives.trueWind.val)
-  // app.debug(derivatives.vmg.val)
+  let drift = null
+  let set = null
+
+  if (cog && sog && hdg && spd) {
+    let dx = sog * Math.cos(cog) - spd * Math.cos(hdg)
+    let dy = sog * Math.sin(cog) - spd * Math.sin(hdg)
+
+    if (lwy) {
+      const lm = spd * Math.tan(lwy)
+      const la = hdg - Math.PI
+      const lx = lm * Math.cos(la)
+      const ly = lm * Math.sin(la)
+      dx -= lx
+      dy -= ly
+    }
+
+    drift = Math.sqrt(dx * dx + dy * dy)
+    set = Math.atan2(dy, dx)
+  }
+
+  derivatives.drift.val = {
+    mod: { value: drift, timestamp: currentTime },
+    ang: { value: set, timestamp: currentTime }
+  }
+
+  // Send Derivatives
+  const values = []
+
+  Object.values(derivatives).forEach((inst:Instrument<any>) => {
+    if (inst.val) {
+      if (inst instanceof VectorInstrument) {
+        values.push({ path: inst.path[0], value: inst.val.mod })
+        values.push({ path: inst.path[1], value: inst.val.ang })
+      } else {
+        values.push({ path: inst.path[0], value: inst.val })
+      }
+    }
+  })
+
+  return { updates: [{ values }] }
+
+  // app.debug(values)
   // app.debug(currentTime);
 };

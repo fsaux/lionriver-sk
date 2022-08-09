@@ -35,7 +35,7 @@ function calc(app, primitives, derivatives, leewayTable) {
         brg = geolib.getGreatCircleBearing(primitives.position.val, primitives.nextWptPos.val) * Math.PI / 180;
         if (primitives.prevWptPos.val) {
             legbrg = geolib.getGreatCircleBearing(primitives.prevWptPos.val, primitives.nextWptPos.val) * Math.PI / 180;
-            xte = Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000;
+            xte = -Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000;
         }
         if (sog && cog) {
             vmgwpt = sog * Math.cos(cog - brg);
@@ -66,13 +66,16 @@ function calc(app, primitives, derivatives, leewayTable) {
         var x = aws * Math.cos(awa) - spd;
         var y = aws * Math.sin(awa);
         tws = Math.sqrt(x * x + y * y);
-        twa = Math.atan2(y, x);
+        twa = (Math.atan2(y, x) + 2 * Math.PI) % (2 * Math.PI);
         vmg = spd * Math.cos(twa);
         if (hdg) {
             twd = twa + hdg;
+            twd = (twd + 2 * Math.PI) % (2 * Math.PI);
         }
         lwy = leewayTable.get(awa, aws, spd);
-        app.debug(awa * 180 / Math.PI, aws / 1852 * 3600, spd / 1852 * 3600, lwy);
+        if (awa > Math.PI) {
+            lwy = -lwy;
+        }
     }
     derivatives.trueWind.val = {
         mod: { value: tws, timestamp: currentTime },
@@ -80,8 +83,42 @@ function calc(app, primitives, derivatives, leewayTable) {
     };
     derivatives.vmg.val = { value: vmg, timestamp: currentTime };
     derivatives.twd.val = { value: twd, timestamp: currentTime };
-    // app.debug(derivatives.trueWind.val)
-    // app.debug(derivatives.vmg.val)
+    derivatives.leeway.val = { value: lwy, timestamp: currentTime };
+    var drift = null;
+    var set = null;
+    if (cog && sog && hdg && spd) {
+        var dx = sog * Math.cos(cog) - spd * Math.cos(hdg);
+        var dy = sog * Math.sin(cog) - spd * Math.sin(hdg);
+        if (lwy) {
+            var lm = spd * Math.tan(lwy);
+            var la = hdg - Math.PI;
+            var lx = lm * Math.cos(la);
+            var ly = lm * Math.sin(la);
+            dx -= lx;
+            dy -= ly;
+        }
+        drift = Math.sqrt(dx * dx + dy * dy);
+        set = Math.atan2(dy, dx);
+    }
+    derivatives.drift.val = {
+        mod: { value: drift, timestamp: currentTime },
+        ang: { value: set, timestamp: currentTime }
+    };
+    // Send Derivatives
+    var values = [];
+    Object.values(derivatives).forEach(function (inst) {
+        if (inst.val) {
+            if (inst instanceof instrument_1.VectorInstrument) {
+                values.push({ path: inst.path[0], value: inst.val.mod });
+                values.push({ path: inst.path[1], value: inst.val.ang });
+            }
+            else {
+                values.push({ path: inst.path[0], value: inst.val });
+            }
+        }
+    });
+    return { updates: [{ values: values }] };
+    // app.debug(values)
     // app.debug(currentTime);
 }
 exports.calc = calc;
