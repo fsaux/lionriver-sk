@@ -17,6 +17,10 @@ function calc(app, primitives, derivatives, leewayTable) {
             inst.val = app.getSelfPath(inst.path[0]);
         }
     });
+    var windSensorHeight = app.getSelfPath('design.airHeight');
+    if (!windSensorHeight) {
+        windSensorHeight = 10;
+    } // Default to 10m for ORC VPP
     // Calculate derivatives
     var currentTime = new Date(Date.now()).toISOString();
     var sog = null;
@@ -63,18 +67,17 @@ function calc(app, primitives, derivatives, leewayTable) {
         awa = primitives.appWind.val.ang;
     }
     if (awa && aws && spd) {
-        var x = aws * Math.cos(awa) - spd;
-        var y = aws * Math.sin(awa);
-        tws = Math.sqrt(x * x + y * y);
-        twa = (Math.atan2(y, x) + 2 * Math.PI) % (2 * Math.PI);
-        vmg = spd * Math.cos(twa);
-        if (hdg) {
-            twd = twa + hdg;
-            twd = (twd + 2 * Math.PI) % (2 * Math.PI);
-        }
         lwy = leewayTable.get(awa, aws, spd);
         if (awa > Math.PI) {
             lwy = -lwy;
+        }
+        var x = aws * Math.cos(awa) - spd;
+        var y = aws * Math.sin(awa);
+        tws = Math.sqrt(x * x + y * y);
+        twa = Math.atan2(y, x);
+        vmg = spd * Math.cos(twa);
+        if (hdg) {
+            twd = twa + hdg;
         }
     }
     derivatives.trueWind.val = {
@@ -104,7 +107,7 @@ function calc(app, primitives, derivatives, leewayTable) {
         mod: { value: drift, timestamp: currentTime },
         ang: { value: set, timestamp: currentTime }
     };
-    // Send Derivatives
+    // prepare update obj
     var values = [];
     Object.values(derivatives).forEach(function (inst) {
         if (inst.val) {
@@ -118,8 +121,8 @@ function calc(app, primitives, derivatives, leewayTable) {
         }
     });
     return { updates: [{ values: values }] };
-    // app.debug(values)
-    // app.debug(currentTime);
+    // app.debug('--------------------')
+    // app.debug(tws * 3600 / 1852)
 }
 exports.calc = calc;
 ;

@@ -36,13 +36,13 @@ export const myLwyTab = [[0, 0, 0, 55],
   [170, 0.07, 0.93, 93],
   [180, 0, 0.9, 93]]
 
-const K :number = 0.00017 // Empiric from data analysis
+const K1 :number = 0.00017 // Empiric from data analysis
 const MaxLeeway :number = 6 // Keep it below this max value
 
 export class LeewayTable {
   private leewayPoints: Array<LeewayPoint>
 
-  constructor (lwTable, app) {
+  constructor (lwTable) {
     this.leewayPoints = []
     for (let i: number = 0; i < 180; i++) {
       this.leewayPoints.push(this.getInterpolated(i, lwTable))
@@ -61,7 +61,7 @@ export class LeewayTable {
 
     const hf = aws * aws * (cd * Math.sin(awa) + cl * Math.cos(awa)) * aref
 
-    if (bspd !== 0) { lwy = Math.asin(K * hf / bspd / bspd) } else { lwy = 0 }
+    if (bspd !== 0) { lwy = Math.asin(K1 * hf / bspd / bspd) } else { lwy = 0 }
 
     if (lwy > MaxLeeway) { lwy = MaxLeeway }
 

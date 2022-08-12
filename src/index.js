@@ -2,6 +2,9 @@
 const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
 const nav = require('./lib/nav')
 const leeway = require('./lib/leeway')
+const polar = require('./lib/polar')
+const path = require('path')
+const { getAreaOfPolygon } = require('geolib')
 
 module.exports = function (app) {
   const plugin = {}
@@ -41,21 +44,25 @@ module.exports = function (app) {
       'environment.current.setTrue', 15)
   }
 
+  let leewayTable
+  let polarTable
+
   plugin.id = 'lionriver-sk'
-  plugin.name = 'Lionriver navigator plugin'
+  plugin.name = 'Lionriver navigator'
   plugin.description = 'Lionriver navigator on SK Server'
 
   plugin.start = function (options, restartPlugin) {
     // Here we put our plugin logic
     app.debug('Plugin started')
 
+    leewayTable = new leeway.LeewayTable(leeway.myLwyTab)
+    polarTable = new polar.Polar('Default', path.join(app.config.configPath, options.polarFile))
+
     Object.values(primitives).forEach((inst) => { inst.timeout = options.dataTimeout })
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
 
-    const leewayTable = new leeway.LeewayTable(leeway.myLwyTab, app)
-
     function doNavCalcs () {
-      const updObj = nav.calc(app, primitives, derivatives, leewayTable)
+      const updObj = nav.calc(app, primitives, derivatives, leewayTable, polarTable)
       app.handleMessage(plugin.id, updObj)
 
       // app.debug(primitives);
@@ -74,12 +81,15 @@ module.exports = function (app) {
 
   plugin.schema = {
     type: 'object',
-    description: 'Description',
     properties: {
       dataTimeout: {
         title: 'Invalidate output if no input received after (seconds)',
         type: 'number',
         default: '10'
+      },
+      polarFile: {
+        title: 'Polar file',
+        type: 'string'
       }
     }
   }

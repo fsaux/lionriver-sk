@@ -32,10 +32,10 @@ exports.myLwyTab = [[0, 0, 0, 55],
     [160, 0.15, 0.95, 93],
     [170, 0.07, 0.93, 93],
     [180, 0, 0.9, 93]];
-var K = 0.00017; // Empiric from data analysis
+var K1 = 0.00017; // Empiric from data analysis
 var MaxLeeway = 6; // Keep it below this max value
 var LeewayTable = /** @class */ (function () {
-    function LeewayTable(lwTable, app) {
+    function LeewayTable(lwTable) {
         this.leewayPoints = [];
         for (var i = 0; i < 180; i++) {
             this.leewayPoints.push(this.getInterpolated(i, lwTable));
@@ -52,7 +52,7 @@ var LeewayTable = /** @class */ (function () {
         var aref = this.leewayPoints[idx].Aref;
         var hf = aws * aws * (cd * Math.sin(awa) + cl * Math.cos(awa)) * aref;
         if (bspd !== 0) {
-            lwy = Math.asin(K * hf / bspd / bspd);
+            lwy = Math.asin(K1 * hf / bspd / bspd);
         }
         else {
             lwy = 0;

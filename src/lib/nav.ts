@@ -3,8 +3,9 @@ import * as geolib from 'geolib'
 import * as geoutils from 'geolocation-utils'
 import { Instrument, VectorInstrument } from './instrument'
 import { LeewayTable } from './leeway'
+import { Polar } from './polar'
 
-export function calc (app, primitives, derivatives, leewayTable: LeewayTable): Object {
+export function calc (app, primitives, derivatives, leewayTable: LeewayTable, polarTable: Polar): Object {
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
     if (inst instanceof VectorInstrument) {
@@ -16,6 +17,9 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable): O
       inst.val = app.getSelfPath(inst.path[0])
     }
   })
+
+  let windSensorHeight = app.getSelfPath('design.airHeight')
+  if (!windSensorHeight) { windSensorHeight = 10 } // Default to 10m for ORC VPP
 
   // Calculate derivatives
   const currentTime:string = new Date(Date.now()).toISOString()
@@ -68,6 +72,8 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable): O
   }
 
   if (awa && aws && spd) {
+    lwy = leewayTable.get(awa, aws, spd)
+    if (awa > Math.PI) { lwy = -lwy }
     const x = aws * Math.cos(awa) - spd
     const y = aws * Math.sin(awa)
     tws = Math.sqrt(x * x + y * y)
@@ -76,8 +82,6 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable): O
     if (hdg) {
       twd = twa + hdg
     }
-    lwy = leewayTable.get(awa, aws, spd)
-    if (awa > Math.PI) { lwy = -lwy }
   }
 
   derivatives.trueWind.val = {
@@ -113,7 +117,7 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable): O
     ang: { value: set, timestamp: currentTime }
   }
 
-  // Send Derivatives
+  // prepare update obj
   const values = []
 
   Object.values(derivatives).forEach((inst:Instrument<any>) => {
@@ -129,6 +133,6 @@ export function calc (app, primitives, derivatives, leewayTable: LeewayTable): O
 
   return { updates: [{ values }] }
 
-  // app.debug(values)
-  // app.debug(currentTime);
+  // app.debug('--------------------')
+  // app.debug(tws * 3600 / 1852)
 };
