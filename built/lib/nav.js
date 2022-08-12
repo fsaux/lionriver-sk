@@ -4,7 +4,7 @@ exports.calc = void 0;
 /* eslint-disable no-unused-vars */
 var geolib = require("geolib");
 var instrument_1 = require("./instrument");
-function calc(app, primitives, derivatives, leewayTable) {
+function calc(app, primitives, derivatives, leewayTable, polarTable) {
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
         if (inst instanceof instrument_1.VectorInstrument) {

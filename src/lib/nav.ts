@@ -2,10 +2,10 @@
 import * as geolib from 'geolib'
 import * as geoutils from 'geolocation-utils'
 import { Instrument, VectorInstrument } from './instrument'
-import { LeewayTable } from './leeway'
+import { Leeway } from './leeway'
 import { Polar } from './polar'
 
-export function calc (app, primitives, derivatives, leewayTable: LeewayTable, polarTable: Polar): Object {
+export function calc (app, primitives, derivatives, leewayTable: Leeway, polarTable: Polar): Object {
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
     if (inst instanceof VectorInstrument) {

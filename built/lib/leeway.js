@@ -1,7 +1,7 @@
 "use strict";
 /* eslint-disable no-array-constructor */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LeewayTable = exports.myLwyTab = void 0;
+exports.Leeway = exports.myLwyTab = void 0;
 var LeewayPoint = /** @class */ (function () {
     function LeewayPoint(coef) {
         this.AWA = coef[0];
@@ -34,14 +34,14 @@ exports.myLwyTab = [[0, 0, 0, 55],
     [180, 0, 0.9, 93]];
 var K1 = 0.00017; // Empiric from data analysis
 var MaxLeeway = 6; // Keep it below this max value
-var LeewayTable = /** @class */ (function () {
-    function LeewayTable(lwTable) {
+var Leeway = /** @class */ (function () {
+    function Leeway(lwTable) {
         this.leewayPoints = [];
         for (var i = 0; i < 180; i++) {
             this.leewayPoints.push(this.getInterpolated(i, lwTable));
         }
     }
-    LeewayTable.prototype.get = function (awa, aws, bspd) {
+    Leeway.prototype.get = function (awa, aws, bspd) {
         var lwy = 0;
         var idx = Math.round(awa * 180 / Math.PI);
         if (idx === 180) {
@@ -62,7 +62,7 @@ var LeewayTable = /** @class */ (function () {
         }
         return lwy;
     };
-    LeewayTable.prototype.getInterpolated = function (awa, lwp) {
+    Leeway.prototype.getInterpolated = function (awa, lwp) {
         var i = lwp.findIndex(function (x) { return x[0] > awa; });
         if (i) {
             var lp1 = new LeewayPoint(lwp[i]);
@@ -82,6 +82,6 @@ var LeewayTable = /** @class */ (function () {
             }
         }
     };
-    return LeewayTable;
+    return Leeway;
 }());
-exports.LeewayTable = LeewayTable;
+exports.Leeway = Leeway;

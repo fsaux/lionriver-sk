@@ -67,11 +67,10 @@ var PolarLine = /** @class */ (function () {
 }());
 exports.PolarLine = PolarLine;
 var Polar = /** @class */ (function () {
-    function Polar(name, fn, app) {
+    function Polar(name, fn) {
         var _this = this;
         this.name = name;
         this.lines = [];
-        this.app = app;
         var contents = fs.readFileSync(fn, 'utf-8');
         var arr = contents.split(/\r?\n/);
         arr.forEach(function (x) {
@@ -92,19 +91,67 @@ var Polar = /** @class */ (function () {
         }
         if (i == 0)
             return 0;
-        this.app.debug(i);
-        this.app.debug(maxIndex);
         if (tws > this.lines[i].tws)
             return this.lines[maxIndex].getTarget(twa);
         var bs1 = this.lines[i - 1].getTarget(twa);
         var bs2 = this.lines[i].getTarget(twa);
         var tws1 = this.lines[i - 1].tws;
         var tws2 = this.lines[i].tws;
-        this.app.debug(bs1);
-        this.app.debug(bs2);
-        this.app.debug(tws1);
-        this.app.debug(tws2);
         return bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1);
+    };
+    Polar.prototype.getBeatTarget = function (tws) {
+        var i = 0;
+        var bp = new PolarPoint();
+        var maxIndex = this.lines.length - 1;
+        while (this.lines[i].tws < tws && i < maxIndex) {
+            i++;
+        }
+        if (i == 0) {
+            bp.spd = 0;
+            bp.twa = 0;
+            return bp;
+        }
+        if (tws > this.lines[i].tws) {
+            bp.spd = this.lines[maxIndex].beatSpd;
+            bp.twa = this.lines[maxIndex].beatTwa;
+            return bp;
+        }
+        var bs1 = this.lines[i - 1].beatSpd;
+        var bs2 = this.lines[i].beatSpd;
+        var tws1 = this.lines[i - 1].tws;
+        var tws2 = this.lines[i].tws;
+        var twa1 = this.lines[i - 1].beatTwa;
+        var twa2 = this.lines[i].beatTwa;
+        bp.spd = bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1);
+        bp.twa = twa1 + (twa2 - twa1) * (tws - tws1) / (tws2 - tws1);
+        return bp;
+    };
+    Polar.prototype.getRunTarget = function (tws) {
+        var i = 0;
+        var bp = new PolarPoint();
+        var maxIndex = this.lines.length - 1;
+        while (this.lines[i].tws < tws && i < maxIndex) {
+            i++;
+        }
+        if (i == 0) {
+            bp.spd = 0;
+            bp.twa = 0;
+            return bp;
+        }
+        if (tws > this.lines[i].tws) {
+            bp.spd = this.lines[maxIndex].runSpd;
+            bp.twa = this.lines[maxIndex].runTwa;
+            return bp;
+        }
+        var bs1 = this.lines[i - 1].runSpd;
+        var bs2 = this.lines[i].runSpd;
+        var tws1 = this.lines[i - 1].tws;
+        var tws2 = this.lines[i].tws;
+        var twa1 = this.lines[i - 1].runTwa;
+        var twa2 = this.lines[i].runTwa;
+        bp.spd = bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1);
+        bp.twa = twa1 + (twa2 - twa1) * (tws - tws1) / (tws2 - tws1);
+        return bp;
     };
     return Polar;
 }());

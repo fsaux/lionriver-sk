@@ -119,4 +119,76 @@ export class Polar {
 
     return bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1)
   }
+
+  getBeatTarget (tws:number):PolarPoint {
+    let i = 0
+
+    const bp = new PolarPoint()
+
+    const maxIndex = this.lines.length - 1
+
+    while (this.lines[i].tws < tws && i < maxIndex) {
+      i++
+    }
+
+    if (i == 0) {
+      bp.spd = 0
+      bp.twa = 0
+      return bp
+    }
+
+    if (tws > this.lines[i].tws) {
+      bp.spd = this.lines[maxIndex].beatSpd
+      bp.twa = this.lines[maxIndex].beatTwa
+      return bp
+    }
+
+    const bs1 = this.lines[i - 1].beatSpd
+    const bs2 = this.lines[i].beatSpd
+    const tws1 = this.lines[i - 1].tws
+    const tws2 = this.lines[i].tws
+    const twa1 = this.lines[i - 1].beatTwa
+    const twa2 = this.lines[i].beatTwa
+
+    bp.spd = bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1)
+    bp.twa = twa1 + (twa2 - twa1) * (tws - tws1) / (tws2 - tws1)
+
+    return bp
+  }
+
+  getRunTarget (tws:number):PolarPoint {
+    let i = 0
+
+    const bp = new PolarPoint()
+
+    const maxIndex = this.lines.length - 1
+
+    while (this.lines[i].tws < tws && i < maxIndex) {
+      i++
+    }
+
+    if (i == 0) {
+      bp.spd = 0
+      bp.twa = 0
+      return bp
+    }
+
+    if (tws > this.lines[i].tws) {
+      bp.spd = this.lines[maxIndex].runSpd
+      bp.twa = this.lines[maxIndex].runTwa
+      return bp
+    }
+
+    const bs1 = this.lines[i - 1].runSpd
+    const bs2 = this.lines[i].runSpd
+    const tws1 = this.lines[i - 1].tws
+    const tws2 = this.lines[i].tws
+    const twa1 = this.lines[i - 1].runTwa
+    const twa2 = this.lines[i].runTwa
+
+    bp.spd = bs1 + (bs2 - bs1) * (tws - tws1) / (tws2 - tws1)
+    bp.twa = twa1 + (twa2 - twa1) * (tws - tws1) / (tws2 - tws1)
+
+    return bp
+  }
 }

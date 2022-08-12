@@ -39,7 +39,7 @@ export const myLwyTab = [[0, 0, 0, 55],
 const K1 :number = 0.00017 // Empiric from data analysis
 const MaxLeeway :number = 6 // Keep it below this max value
 
-export class LeewayTable {
+export class Leeway {
   private leewayPoints: Array<LeewayPoint>
 
   constructor (lwTable) {

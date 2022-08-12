@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
 const nav = require('./lib/nav')
-const leeway = require('./lib/leeway')
-const polar = require('./lib/polar')
+const { Leeway, myLwyTab } = require('./lib/leeway')
+const { Polar, PolarPoint } = require('./lib/polar')
 const path = require('path')
 const { getAreaOfPolygon } = require('geolib')
 
@@ -55,8 +55,8 @@ module.exports = function (app) {
     // Here we put our plugin logic
     app.debug('Plugin started')
 
-    leewayTable = new leeway.LeewayTable(leeway.myLwyTab)
-    polarTable = new polar.Polar('Default', path.join(app.config.configPath, options.polarFile))
+    leewayTable = new Leeway(myLwyTab)
+    polarTable = new Polar('Default', path.join(app.config.configPath, options.polarFile))
 
     Object.values(primitives).forEach((inst) => { inst.timeout = options.dataTimeout })
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
