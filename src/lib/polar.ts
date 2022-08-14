@@ -87,13 +87,14 @@ export class Polar {
     this.name = name
     this.lines = []
 
-    const contents = fs.readFileSync(fn, 'utf-8')
-    const arr: string[] = contents.split(/\r?\n/)
-
-    arr.forEach(x => {
-      const pl = new PolarLine(x)
-      if (pl.tws) { this.lines.push(pl) }
-    })
+    try {
+      const contents = fs.readFileSync(fn, 'utf-8')
+      const arr: string[] = contents.split(/\r?\n/)
+      arr.forEach(x => {
+        const pl = new PolarLine(x)
+        if (pl.tws) { this.lines.push(pl) }
+      })
+    } catch { this.lines = null }
   }
 
   getTarget (twa:number, tws:number):number {

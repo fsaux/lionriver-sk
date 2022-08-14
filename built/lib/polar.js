@@ -67,18 +67,23 @@ var PolarLine = /** @class */ (function () {
 }());
 exports.PolarLine = PolarLine;
 var Polar = /** @class */ (function () {
-    function Polar(name, fn) {
+    function Polar(name, fn, app) {
         var _this = this;
         this.name = name;
         this.lines = [];
-        var contents = fs.readFileSync(fn, 'utf-8');
-        var arr = contents.split(/\r?\n/);
-        arr.forEach(function (x) {
-            var pl = new PolarLine(x);
-            if (pl.tws) {
-                _this.lines.push(pl);
-            }
-        });
+        try {
+            var contents = fs.readFileSync(fn, 'utf-8');
+            var arr = contents.split(/\r?\n/);
+            arr.forEach(function (x) {
+                var pl = new PolarLine(x);
+                if (pl.tws) {
+                    _this.lines.push(pl);
+                }
+            });
+        }
+        catch (_a) {
+            this.lines = null;
+        }
     }
     Polar.prototype.getTarget = function (twa, tws) {
         twa = (twa + 360) % 360;

@@ -1,10 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calc = void 0;
+exports.navCalc = exports.sailingMode = void 0;
 /* eslint-disable no-unused-vars */
 var geolib = require("geolib");
 var instrument_1 = require("./instrument");
-function calc(app, primitives, derivatives, leewayTable, polarTable) {
+var sailingMode;
+(function (sailingMode) {
+    sailingMode[sailingMode["beating"] = 0] = "beating";
+    sailingMode[sailingMode["reaching"] = 1] = "reaching";
+    sailingMode[sailingMode["running"] = 2] = "running";
+})(sailingMode = exports.sailingMode || (exports.sailingMode = {}));
+function navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode) {
+    //
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
         if (inst instanceof instrument_1.VectorInstrument) {
@@ -75,6 +82,16 @@ function calc(app, primitives, derivatives, leewayTable, polarTable) {
         var y = aws * Math.sin(awa);
         tws = Math.sqrt(x * x + y * y);
         twa = Math.atan2(y, x);
+        // Set estimated saling mode in case route and/or performance data is not available
+        if (Math.abs(twa) < 55 * Math.PI / 180) {
+            sMode = sailingMode.beating;
+        }
+        else if (Math.abs(twa) > 130 * Math.PI / 180) {
+            sMode = sailingMode.running;
+        }
+        else {
+            sMode = sailingMode.reaching;
+        }
         vmg = spd * Math.cos(twa);
         if (hdg) {
             twd = twa + hdg;
@@ -124,5 +141,5 @@ function calc(app, primitives, derivatives, leewayTable, polarTable) {
     // app.debug('--------------------')
     // app.debug(tws * 3600 / 1852)
 }
-exports.calc = calc;
+exports.navCalc = navCalc;
 ;

@@ -3,9 +3,17 @@ import * as geolib from 'geolib'
 import * as geoutils from 'geolocation-utils'
 import { Instrument, VectorInstrument } from './instrument'
 import { Leeway } from './leeway'
-import { Polar } from './polar'
+import { Polar, PolarPoint } from './polar'
 
-export function calc (app, primitives, derivatives, leewayTable: Leeway, polarTable: Polar): Object {
+export enum sailingMode{
+  beating,
+  reaching,
+  running
+}
+
+export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
+  polarTable: Polar, sMode: sailingMode): Object {
+  //
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
     if (inst instanceof VectorInstrument) {
@@ -73,11 +81,17 @@ export function calc (app, primitives, derivatives, leewayTable: Leeway, polarTa
 
   if (awa && aws && spd) {
     lwy = leewayTable.get(awa, aws, spd)
+
     if (awa > Math.PI) { lwy = -lwy }
     const x = aws * Math.cos(awa) - spd
     const y = aws * Math.sin(awa)
     tws = Math.sqrt(x * x + y * y)
     twa = Math.atan2(y, x)
+
+    // Set estimated saling mode in case route and/or polar data is not available
+    if (Math.abs(twa) < 55 * Math.PI / 180) { sMode = sailingMode.beating } else
+    if (Math.abs(twa) > 130 * Math.PI / 180) { sMode = sailingMode.running } else { sMode = sailingMode.reaching }
+
     vmg = spd * Math.cos(twa)
     if (hdg) {
       twd = twa + hdg
@@ -117,6 +131,51 @@ export function calc (app, primitives, derivatives, leewayTable: Leeway, polarTa
     ang: { value: set, timestamp: currentTime }
   }
 
+  let tgtspd = null
+  let tgttwa = null
+  let perf = null
+
+  if (twa && spd && brg && lwy && polarTable.lines) {
+    let angle = Math.abs((twd - brg) * 180 / Math.PI + 360) % 360
+    if (angle > 180) angle = 360 - angle
+
+    const pb:PolarPoint = polarTable.getBeatTarget(tws)
+    const pr:PolarPoint = polarTable.getRunTarget(tws)
+
+    if (angle <= (pb.twa + 10)) {
+      // Targets are relative to boat instruments (corrected for leeway)
+      tgtspd = pr.spd * Math.cos(lwy)
+      tgttwa = pr.twa + lwy
+      const z = (pr.spd * Math.cos(pr.twa * Math.PI / 180))
+      if (z != 0) { perf = vmg / z }
+      sMode = sailingMode.beating
+    }
+
+    if (angle < (pr.twa - 10) && angle > (pb.twa + 10)) {
+      // Targets are relative to boat instruments (corrected for leeway)
+      const tspd = polarTable.getTarget(twa + lwy, tws)
+      tgtspd = tspd * Math.cos(lwy)
+      tgttwa = twa
+      if (tspd != 0) { perf = spd / Math.cos(lwy) / tspd }
+      sMode = sailingMode.reaching
+    }
+
+    if (angle >= (pr.twa - 10)) {
+      // Targets are relative to boat instruments (corrected for leeway)
+      tgtspd = pr.spd * Math.cos(lwy)
+      tgttwa = pr.twa + lwy
+      const z = (pr.spd * Math.cos(pr.twa * Math.PI / 180))
+      if (z != 0) { perf = vmg / z }
+      sMode = sailingMode.running
+    }
+  }
+
+  derivatives.polarTgt.val = {
+    mod: { value: tgtspd, timestamp: currentTime },
+    ang: { value: tgttwa, timestamp: currentTime }
+  }
+  derivatives.perf.val = { value: perf, timestamp: currentTime }
+
   // prepare update obj
   const values = []
 
@@ -132,7 +191,4 @@ export function calc (app, primitives, derivatives, leewayTable: Leeway, polarTa
   })
 
   return { updates: [{ values }] }
-
-  // app.debug('--------------------')
-  // app.debug(tws * 3600 / 1852)
 };

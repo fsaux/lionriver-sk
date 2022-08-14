@@ -15,6 +15,7 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "eqeqeq": "off"
+        "eqeqeq": "off",
+        "prefer-const":"off"
       }
 }

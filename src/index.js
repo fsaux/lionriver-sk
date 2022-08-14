@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
-const nav = require('./lib/nav')
+const { navCalc, sailingMode } = require('./lib/nav')
 const { Leeway, myLwyTab } = require('./lib/leeway')
 const { Polar, PolarPoint } = require('./lib/polar')
 const path = require('path')
@@ -38,14 +38,19 @@ module.exports = function (app) {
       'environment.wind.angleTrueWater', 3),
     vmg: new LinearInstrument('performance.velocityMadeGood', 3),
     twd: new LinearInstrument('environment.wind.directionTrue', 3),
-    leeway: new AngularInstrument('performance.leewayAngle', 3),
+    leeway: new AngularInstrument('performance.leeway', 3),
     drift: new VectorInstrument(
       'environment.current.drift',
-      'environment.current.setTrue', 15)
+      'environment.current.setTrue', 15),
+    polarTgt: new VectorInstrument(
+      'performance.targetSpeed',
+      'performance.targetAngle', 5),
+    perf: new LinearInstrument('performance.polarSpeedRatio', 5)
   }
 
   let leewayTable
   let polarTable
+  let sMode
 
   plugin.id = 'lionriver-sk'
   plugin.name = 'Lionriver navigator'
@@ -57,12 +62,13 @@ module.exports = function (app) {
 
     leewayTable = new Leeway(myLwyTab)
     polarTable = new Polar('Default', path.join(app.config.configPath, options.polarFile))
+    sMode = null
 
     Object.values(primitives).forEach((inst) => { inst.timeout = options.dataTimeout })
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
 
     function doNavCalcs () {
-      const updObj = nav.calc(app, primitives, derivatives, leewayTable, polarTable)
+      const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode)
       app.handleMessage(plugin.id, updObj)
 
       // app.debug(primitives);
