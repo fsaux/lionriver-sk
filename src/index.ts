@@ -1,13 +1,37 @@
 /* eslint-disable no-unused-vars */
+import { navCalc, sailingMode, NavState } from './lib/nav'
 const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
-const { navCalc, sailingMode } = require('./lib/nav')
 const { Leeway, myLwyTab } = require('./lib/leeway')
 const { Polar, PolarPoint } = require('./lib/polar')
 const path = require('path')
 const { getAreaOfPolygon } = require('geolib')
 
+interface ServerPlugin {
+  name: string
+  description?: string
+  id: string,
+  version?: string
+  start: (config: object, restart: (newConfiguration: object) => void) => any
+  stop: () => void
+  schema: () => object | object
+  uiSchema?: () => object | object
+  registerWithRouter?: (router: any) => void
+  signalKApiRoutes?: (router: any) => any
+  enabledByDefault?: boolean
+  statusMessage?: () => string
+}
+
 module.exports = function (app) {
-  const plugin = {}
+  let plugin: ServerPlugin = {
+    id: 'lionriver-sk',
+    name: 'Lionriver navigator',
+    description: 'Lionriver navigator on SK Server',
+    schema: () => (CONFIG_SCHEMA),
+    uiSchema: () => (CONFIG_UISCHEMA),
+    start: (options:any, restart:any) => { doStartup(options, restart) },
+    stop: () => { doShutdown() }
+  }
+
   const unsubscribes = []
   let timer
 
@@ -50,34 +74,35 @@ module.exports = function (app) {
 
   let leewayTable
   let polarTable
-  let sMode
+  let navState: NavState = { sMode: sailingMode.none }
 
   plugin.id = 'lionriver-sk'
   plugin.name = 'Lionriver navigator'
   plugin.description = 'Lionriver navigator on SK Server'
 
-  plugin.start = function (options, restartPlugin) {
+  const doStartup = (options:any, restart: any) => {
     // Here we put our plugin logic
     app.debug('Plugin started')
 
     leewayTable = new Leeway(myLwyTab)
     polarTable = new Polar('Default', path.join(app.config.configPath, options.polarFile))
-    sMode = null
 
     Object.values(primitives).forEach((inst) => { inst.timeout = options.dataTimeout })
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
 
     function doNavCalcs () {
-      const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode)
+      const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, navState)
+
       app.handleMessage(plugin.id, updObj)
 
-      // app.debug(primitives);
+      app.debug(this.sMode)
+      // app.debug(derivatives)
     }
 
     setInterval(doNavCalcs, 1000)
   }
 
-  plugin.stop = function () {
+  const doShutdown = () => {
     if (timer) {
       clearInterval(timer)
       timer = null
@@ -85,8 +110,7 @@ module.exports = function (app) {
     app.debug('Plugin stopped')
   }
 
-  plugin.schema = {
-    type: 'object',
+  const CONFIG_SCHEMA = {
     properties: {
       dataTimeout: {
         title: 'Invalidate output if no input received after (seconds)',
@@ -99,6 +123,8 @@ module.exports = function (app) {
       }
     }
   }
+
+  const CONFIG_UISCHEMA = {}
 
   return plugin
 }

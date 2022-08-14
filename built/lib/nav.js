@@ -6,11 +6,12 @@ var geolib = require("geolib");
 var instrument_1 = require("./instrument");
 var sailingMode;
 (function (sailingMode) {
-    sailingMode[sailingMode["beating"] = 0] = "beating";
-    sailingMode[sailingMode["reaching"] = 1] = "reaching";
-    sailingMode[sailingMode["running"] = 2] = "running";
+    sailingMode[sailingMode["none"] = 0] = "none";
+    sailingMode[sailingMode["beating"] = 1] = "beating";
+    sailingMode[sailingMode["reaching"] = 2] = "reaching";
+    sailingMode[sailingMode["running"] = 3] = "running";
 })(sailingMode = exports.sailingMode || (exports.sailingMode = {}));
-function navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode) {
+function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) {
     //
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
@@ -82,15 +83,15 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode) {
         var y = aws * Math.sin(awa);
         tws = Math.sqrt(x * x + y * y);
         twa = Math.atan2(y, x);
-        // Set estimated saling mode in case route and/or performance data is not available
+        // Set estimated saling mode in case route and/or polar data is not available
         if (Math.abs(twa) < 55 * Math.PI / 180) {
-            sMode = sailingMode.beating;
+            plugin.sMode = sailingMode.beating;
         }
         else if (Math.abs(twa) > 130 * Math.PI / 180) {
-            sMode = sailingMode.running;
+            plugin.sMode = sailingMode.running;
         }
         else {
-            sMode = sailingMode.reaching;
+            plugin.sMode = sailingMode.reaching;
         }
         vmg = spd * Math.cos(twa);
         if (hdg) {
@@ -124,6 +125,51 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode) {
         mod: { value: drift, timestamp: currentTime },
         ang: { value: set, timestamp: currentTime }
     };
+    var tgtspd = null;
+    var tgttwa = null;
+    var perf = null;
+    if (twa && spd && brg && lwy && polarTable.lines) {
+        var angle = Math.abs((twd - brg) * 180 / Math.PI + 360) % 360;
+        if (angle > 180)
+            angle = 360 - angle;
+        var pb = polarTable.getBeatTarget(tws * 3600 / 1852);
+        var pr = polarTable.getRunTarget(tws * 3600 / 1852);
+        if (angle <= (pb.twa + 10)) {
+            // Targets are relative to boat instruments (corrected for leeway)
+            tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
+            tgttwa = pr.twa * Math.PI / 180 - lwy;
+            var z = (pr.spd * 1852 / 3600 * Math.cos(pr.twa * Math.PI / 180));
+            if (z != 0) {
+                perf = vmg / z;
+            }
+            plugin.sMode = sailingMode.beating;
+        }
+        if (angle < (pr.twa - 10) && angle > (pb.twa + 10)) {
+            // Targets are relative to boat instruments (corrected for leeway)
+            var tspd = polarTable.getTarget((twa + lwy) * 180 / Math.PI, tws * 3600 / 1852) * 1852 / 3600;
+            tgtspd = tspd * Math.cos(lwy);
+            tgttwa = twa;
+            if (tspd != 0) {
+                perf = spd / Math.cos(lwy) / tspd;
+            }
+            plugin.sMode = sailingMode.reaching;
+        }
+        if (angle >= (pr.twa - 10)) {
+            // Targets are relative to boat instruments (corrected for leeway)
+            tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
+            tgttwa = pr.twa * Math.PI / 180 - lwy;
+            var z = (pr.spd * Math.cos(pr.twa * Math.PI / 180));
+            if (z != 0) {
+                perf = vmg / z;
+            }
+            plugin.sMode = sailingMode.running;
+        }
+    }
+    derivatives.polarTgt.val = {
+        mod: { value: tgtspd, timestamp: currentTime },
+        ang: { value: tgttwa, timestamp: currentTime }
+    };
+    derivatives.perf.val = { value: perf, timestamp: currentTime };
     // prepare update obj
     var values = [];
     Object.values(derivatives).forEach(function (inst) {
@@ -138,8 +184,6 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, sMode) {
         }
     });
     return { updates: [{ values: values }] };
-    // app.debug('--------------------')
-    // app.debug(tws * 3600 / 1852)
 }
 exports.navCalc = navCalc;
 ;

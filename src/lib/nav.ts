@@ -6,13 +6,18 @@ import { Leeway } from './leeway'
 import { Polar, PolarPoint } from './polar'
 
 export enum sailingMode{
+  none,
   beating,
   reaching,
   running
 }
 
+export interface NavState {
+  sMode: sailingMode
+}
+
 export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
-  polarTable: Polar, sMode: sailingMode): Object {
+  polarTable: Polar, navState: NavState): Object {
   //
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
@@ -89,8 +94,8 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     twa = Math.atan2(y, x)
 
     // Set estimated saling mode in case route and/or polar data is not available
-    if (Math.abs(twa) < 55 * Math.PI / 180) { sMode = sailingMode.beating } else
-    if (Math.abs(twa) > 130 * Math.PI / 180) { sMode = sailingMode.running } else { sMode = sailingMode.reaching }
+    if (Math.abs(twa) < 55 * Math.PI / 180) { navState.sMode = sailingMode.beating } else
+    if (Math.abs(twa) > 130 * Math.PI / 180) { navState.sMode = sailingMode.running } else { navState.sMode = sailingMode.reaching }
 
     vmg = spd * Math.cos(twa)
     if (hdg) {
@@ -139,34 +144,34 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     let angle = Math.abs((twd - brg) * 180 / Math.PI + 360) % 360
     if (angle > 180) angle = 360 - angle
 
-    const pb:PolarPoint = polarTable.getBeatTarget(tws)
-    const pr:PolarPoint = polarTable.getRunTarget(tws)
+    const pb:PolarPoint = polarTable.getBeatTarget(tws * 3600 / 1852)
+    const pr:PolarPoint = polarTable.getRunTarget(tws * 3600 / 1852)
 
     if (angle <= (pb.twa + 10)) {
       // Targets are relative to boat instruments (corrected for leeway)
-      tgtspd = pr.spd * Math.cos(lwy)
-      tgttwa = pr.twa + lwy
-      const z = (pr.spd * Math.cos(pr.twa * Math.PI / 180))
+      tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy)
+      tgttwa = pr.twa * Math.PI / 180 - lwy
+      const z = (pr.spd * 1852 / 3600 * Math.cos(pr.twa * Math.PI / 180))
       if (z != 0) { perf = vmg / z }
-      sMode = sailingMode.beating
+      navState.sMode = sailingMode.beating
     }
 
     if (angle < (pr.twa - 10) && angle > (pb.twa + 10)) {
       // Targets are relative to boat instruments (corrected for leeway)
-      const tspd = polarTable.getTarget(twa + lwy, tws)
+      const tspd = polarTable.getTarget((twa + lwy) * 180 / Math.PI, tws * 3600 / 1852) * 1852 / 3600
       tgtspd = tspd * Math.cos(lwy)
       tgttwa = twa
       if (tspd != 0) { perf = spd / Math.cos(lwy) / tspd }
-      sMode = sailingMode.reaching
+      navState.sMode = sailingMode.reaching
     }
 
     if (angle >= (pr.twa - 10)) {
       // Targets are relative to boat instruments (corrected for leeway)
-      tgtspd = pr.spd * Math.cos(lwy)
-      tgttwa = pr.twa + lwy
+      tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy)
+      tgttwa = pr.twa * Math.PI / 180 - lwy
       const z = (pr.spd * Math.cos(pr.twa * Math.PI / 180))
       if (z != 0) { perf = vmg / z }
-      sMode = sailingMode.running
+      navState.sMode = sailingMode.running
     }
   }
 

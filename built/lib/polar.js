@@ -67,7 +67,7 @@ var PolarLine = /** @class */ (function () {
 }());
 exports.PolarLine = PolarLine;
 var Polar = /** @class */ (function () {
-    function Polar(name, fn, app) {
+    function Polar(name, fn) {
         var _this = this;
         this.name = name;
         this.lines = [];
