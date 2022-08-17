@@ -11,7 +11,7 @@ var sailingMode;
     sailingMode[sailingMode["reaching"] = 2] = "reaching";
     sailingMode[sailingMode["running"] = 3] = "running";
 })(sailingMode = exports.sailingMode || (exports.sailingMode = {}));
-function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) {
+function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState) {
     //
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
@@ -85,13 +85,13 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) 
         twa = Math.atan2(y, x);
         // Set estimated saling mode in case route and/or polar data is not available
         if (Math.abs(twa) < 55 * Math.PI / 180) {
-            plugin.sMode = sailingMode.beating;
+            navState.sMode = sailingMode.beating;
         }
         else if (Math.abs(twa) > 130 * Math.PI / 180) {
-            plugin.sMode = sailingMode.running;
+            navState.sMode = sailingMode.running;
         }
         else {
-            plugin.sMode = sailingMode.reaching;
+            navState.sMode = sailingMode.reaching;
         }
         vmg = spd * Math.cos(twa);
         if (hdg) {
@@ -142,7 +142,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) 
             if (z != 0) {
                 perf = vmg / z;
             }
-            plugin.sMode = sailingMode.beating;
+            navState.sMode = sailingMode.beating;
         }
         if (angle < (pr.twa - 10) && angle > (pb.twa + 10)) {
             // Targets are relative to boat instruments (corrected for leeway)
@@ -152,7 +152,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) 
             if (tspd != 0) {
                 perf = spd / Math.cos(lwy) / tspd;
             }
-            plugin.sMode = sailingMode.reaching;
+            navState.sMode = sailingMode.reaching;
         }
         if (angle >= (pr.twa - 10)) {
             // Targets are relative to boat instruments (corrected for leeway)
@@ -162,7 +162,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, plugin) 
             if (z != 0) {
                 perf = vmg / z;
             }
-            plugin.sMode = sailingMode.running;
+            navState.sMode = sailingMode.running;
         }
     }
     derivatives.polarTgt.val = {

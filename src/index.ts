@@ -62,7 +62,7 @@ module.exports = function (app) {
       'environment.wind.angleTrueWater', 3),
     vmg: new LinearInstrument('performance.velocityMadeGood', 3),
     twd: new LinearInstrument('environment.wind.directionTrue', 3),
-    leeway: new AngularInstrument('performance.leeway', 3),
+    leeway: new AngularInstrument('navigation.leewayAngle', 3),
     drift: new VectorInstrument(
       'environment.current.drift',
       'environment.current.setTrue', 15),
@@ -95,7 +95,6 @@ module.exports = function (app) {
 
       app.handleMessage(plugin.id, updObj)
 
-      app.debug(this.sMode)
       // app.debug(derivatives)
     }
 
