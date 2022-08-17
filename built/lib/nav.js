@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.navCalc = exports.sailingMode = void 0;
+/* eslint-disable camelcase */
 /* eslint-disable no-unused-vars */
 var geolib = require("geolib");
 var instrument_1 = require("./instrument");
@@ -83,6 +84,8 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
         var y = aws * Math.sin(awa);
         tws = Math.sqrt(x * x + y * y);
         twa = Math.atan2(y, x);
+        if (twa > Math.PI)
+            twa = twa - 2 * Math.PI;
         // Set estimated saling mode in case route and/or polar data is not available
         if (Math.abs(twa) < 55 * Math.PI / 180) {
             navState.sMode = sailingMode.beating;
@@ -128,13 +131,21 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     var tgtspd = null;
     var tgttwa = null;
     var perf = null;
+    var lylDst = null;
+    var lylTime = null;
+    var lylBrg = null;
+    var oLylDst = null;
+    var oLylTime = null;
+    var oLylBrg = null;
+    var dist_s = null;
+    var dist_p = null;
     if (twa && spd && brg && lwy && polarTable.lines) {
         var angle = Math.abs((twd - brg) * 180 / Math.PI + 360) % 360;
         if (angle > 180)
             angle = 360 - angle;
         var pb = polarTable.getBeatTarget(tws * 3600 / 1852);
         var pr = polarTable.getRunTarget(tws * 3600 / 1852);
-        if (angle <= (pb.twa + 10)) {
+        if (angle <= (pb.twa + 15)) {
             // Targets are relative to boat instruments (corrected for leeway)
             tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
             tgttwa = pr.twa * Math.PI / 180 - lwy;
@@ -144,7 +155,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             }
             navState.sMode = sailingMode.beating;
         }
-        if (angle < (pr.twa - 10) && angle > (pb.twa + 10)) {
+        if (angle < (pr.twa - 30) && angle > (pb.twa + 15)) {
             // Targets are relative to boat instruments (corrected for leeway)
             var tspd = polarTable.getTarget((twa + lwy) * 180 / Math.PI, tws * 3600 / 1852) * 1852 / 3600;
             tgtspd = tspd * Math.cos(lwy);
@@ -154,7 +165,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             }
             navState.sMode = sailingMode.reaching;
         }
-        if (angle >= (pr.twa - 10)) {
+        if (angle >= (pr.twa - 30)) {
             // Targets are relative to boat instruments (corrected for leeway)
             tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
             tgttwa = pr.twa * Math.PI / 180 - lwy;
@@ -164,12 +175,68 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             }
             navState.sMode = sailingMode.running;
         }
+        var ttwa = null;
+        if (angle <= (pb.twa + 50))
+            ttwa = pb.twa * Math.PI / 180;
+        if (angle >= (pr.twa - 60))
+            ttwa = pr.twa * Math.PI / 180;
+        if (ttwa) {
+            var relset = set - twd;
+            var dxs = tgtspd * Math.cos(ttwa) + drift * Math.cos(relset);
+            var dys = tgtspd * Math.sin(ttwa) + drift * Math.sin(relset);
+            var tgtcogp = Math.atan2(dys, dxs) + twd;
+            var tgtsogp = Math.sqrt(dxs * dxs + dys * dys);
+            var dxp = tgtspd * Math.cos(-ttwa) + drift * Math.cos(relset);
+            var dyp = tgtspd * Math.sin(-ttwa) + drift * Math.sin(relset);
+            var tgtcogs = Math.atan2(dyp, dxp) + twd;
+            var tgtsogs = Math.sqrt(dxp * dxp + dyp * dyp);
+            var alpha = (tgtcogp - brg + 2 * Math.PI) % (2 * Math.PI);
+            var beta = (brg - tgtcogs + 2 * Math.PI) % (2 * Math.PI);
+            if (alpha == 0) {
+                dist_p = dst;
+                dist_s = 0;
+            }
+            else {
+                if (beta == 0) {
+                    dist_s = dst;
+                    dist_p = 0;
+                }
+                else {
+                    dist_p = dst * Math.sin(beta) / (Math.sin(alpha) * Math.cos(beta) + Math.cos(alpha) * Math.sin(beta));
+                    dist_s = dst * Math.sin(alpha) / (Math.sin(alpha) * Math.cos(beta) + Math.cos(alpha) * Math.sin(beta));
+                }
+            }
+            var time_p = dist_p / tgtsogp;
+            var time_s = dist_s / tgtsogs;
+            if (twa > 0) {
+                lylDst = dist_s;
+                lylTime = time_s;
+                lylBrg = tgtcogs;
+                oLylDst = dist_p;
+                oLylTime = time_p;
+                oLylBrg = tgtcogp;
+            }
+            else {
+                lylDst = dist_p;
+                lylTime = time_p;
+                lylBrg = tgtcogp;
+                oLylDst = dist_s;
+                oLylTime = time_s;
+                oLylBrg = tgtcogs;
+            }
+        }
     }
     derivatives.polarTgt.val = {
         mod: { value: tgtspd, timestamp: currentTime },
         ang: { value: tgttwa, timestamp: currentTime }
     };
     derivatives.perf.val = { value: perf, timestamp: currentTime };
+    derivatives.laylineDst.val = { value: lylDst, timestamp: currentTime };
+    derivatives.laylineTime.val = { value: lylTime, timestamp: currentTime };
+    derivatives.laylineBearing.val = { value: lylBrg, timestamp: currentTime };
+    derivatives.opLaylineDst.val = { value: oLylDst, timestamp: currentTime };
+    derivatives.opLaylineTime.val = { value: oLylTime, timestamp: currentTime };
+    derivatives.opLaylineBearing.val = { value: oLylBrg, timestamp: currentTime };
     // prepare update obj
     var values = [];
     Object.values(derivatives).forEach(function (inst) {

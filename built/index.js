@@ -37,10 +37,16 @@ module.exports = function (app) {
         trueWind: new VectorInstrument('environment.wind.speedTrue', 'environment.wind.angleTrueWater', 3),
         vmg: new LinearInstrument('performance.velocityMadeGood', 3),
         twd: new LinearInstrument('environment.wind.directionTrue', 3),
-        leeway: new AngularInstrument('performance.leeway', 3),
+        leeway: new AngularInstrument('navigation.leewayAngle', 3),
         drift: new VectorInstrument('environment.current.drift', 'environment.current.setTrue', 15),
         polarTgt: new VectorInstrument('performance.targetSpeed', 'performance.targetAngle', 5),
-        perf: new LinearInstrument('performance.polarSpeedRatio', 5)
+        perf: new LinearInstrument('performance.polarSpeedRatio', 5),
+        laylineDst: new LinearInstrument('navigation.racing.layline.distance', 5),
+        laylineTime: new LinearInstrument('navigation.racing.layline.time', 5),
+        laylineBearing: new LinearInstrument('navigation.racing.layline.bearingTrue', 5),
+        opLaylineDst: new LinearInstrument('navigation.racing.oppositeLayline.distance', 5),
+        opLaylineTime: new LinearInstrument('navigation.racing.oppositeLayline.time', 5),
+        opLaylineBearing: new LinearInstrument('navigation.racing.oppositelayline.bearingTrue', 5)
     };
     var leewayTable;
     var polarTable;
@@ -74,11 +80,12 @@ module.exports = function (app) {
             dataTimeout: {
                 title: 'Invalidate output if no input received after (seconds)',
                 type: 'number',
-                default: '10'
+                default: 10
             },
             polarFile: {
                 title: 'Polar file',
-                type: 'string'
+                type: 'string',
+                default: ''
             }
         }
     };
