@@ -2,16 +2,24 @@
   "name": "@fsaux/lionriver-sk",
   "version": "0.0.1",
   "description": "Lionriver navigator plugin",
-  "main": "index.js",
+  "main": "./built/index.js",
   "keywords": [
     "signalk-node-server-plugin"
   ],
   "author": "fernando_saux@hotmail.com",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/node": "^18.7.1",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
     "baconjs": "^1.0.1",
+    "eslint": "^8.21.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.4",
+    "eslint-plugin-promise": "^6.0.0",
     "geolib": "^3.3.1",
-    "geolocation-utils": "^1.2.3"
-  },
-  "signalk-plugin-enabled-by-default": true
+    "geolocation-utils": "^1.2.3",
+    "typescript": "^4.7.4"
+  }
 }
