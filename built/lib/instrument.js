@@ -23,27 +23,35 @@ var Instrument = /** @class */ (function () {
         this.avgVal = null;
         this.valList = [];
         this.timeout = 60 * 1000; // Set default timeout to 1 minute
+        this.expired = true;
     }
     Object.defineProperty(Instrument.prototype, "val", {
         get: function () {
             return this.avgVal;
         },
         set: function (newval) {
-            if (newval) {
-                if (newval.value) {
-                    this.lastUpdate = Date.parse(newval.timestamp);
-                    this.valList.push(newval.value);
+            if (newval.value) {
+                this.lastUpdate = Date.parse(newval.timestamp);
+                if (this.expired) {
+                    this.valList = [];
+                    this.expired = false;
                 }
-            }
-            if (this.valList.length > this.window) {
-                this.valList.shift();
-            }
-            var deltaT = Date.now() - this.lastUpdate;
-            if (deltaT < this.timeout * 1000) {
+                this.valList.push(newval.value);
+                if (this.valList.length > this.window) {
+                    this.valList.shift();
+                }
                 this.avgVal = this.calcAvg();
             }
             else {
-                this.avgVal = null;
+                var deltaT = Date.now() - this.lastUpdate;
+                if (deltaT > this.timeout * 1000) {
+                    if (this.avgVal == null) {
+                        this.expired = true;
+                    }
+                    else {
+                        this.avgVal = null;
+                    }
+                }
             }
         },
         enumerable: false,
@@ -88,23 +96,30 @@ var VectorInstrument = /** @class */ (function (_super) {
             return this.avgVal;
         },
         set: function (newval) {
-            if (newval.mod && newval.ang) {
-                if (newval.mod.value && newval.ang.value) {
-                    var lu1 = Date.parse(newval.mod.timestamp);
-                    var lu2 = Date.parse(newval.ang.timestamp);
-                    this.lastUpdate = lu1 < lu2 ? lu1 : lu2;
-                    this.valList.push({ mod: newval.mod.value, ang: newval.ang.value });
+            if (newval.mod.value && newval.ang.value) {
+                var lu1 = Date.parse(newval.mod.timestamp);
+                var lu2 = Date.parse(newval.ang.timestamp);
+                this.lastUpdate = lu1 < lu2 ? lu1 : lu2;
+                if (this.expired) {
+                    this.valList = [];
+                    this.expired = false;
                 }
-            }
-            if (this.valList.length > this.window) {
-                this.valList.shift();
-            }
-            var deltaT = Date.now() - this.lastUpdate;
-            if (deltaT < this.timeout * 1000) {
+                this.valList.push({ mod: newval.mod.value, ang: newval.ang.value });
+                if (this.valList.length > this.window) {
+                    this.valList.shift();
+                }
                 this.avgVal = this.calcAvg();
             }
             else {
-                this.avgVal = null;
+                var deltaT = Date.now() - this.lastUpdate;
+                if (deltaT > this.timeout * 1000) {
+                    if (this.avgVal.mod == null && this.avgVal.ang == null) {
+                        this.expired = true;
+                    }
+                    else {
+                        this.avgVal = { mod: null, ang: null };
+                    }
+                }
             }
         },
         enumerable: false,

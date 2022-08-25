@@ -240,7 +240,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     // prepare update obj
     var values = [];
     Object.values(derivatives).forEach(function (inst) {
-        if (inst.val) {
+        if (!inst.expired) {
             if (inst instanceof instrument_1.VectorInstrument) {
                 values.push({ path: inst.path[0], value: inst.val.mod });
                 values.push({ path: inst.path[1], value: inst.val.ang });

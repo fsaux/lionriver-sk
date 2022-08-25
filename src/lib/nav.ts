@@ -256,7 +256,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   const values = []
 
   Object.values(derivatives).forEach((inst:Instrument<any>) => {
-    if (inst.val) {
+    if (!inst.expired) {
       if (inst instanceof VectorInstrument) {
         values.push({ path: inst.path[0], value: inst.val.mod })
         values.push({ path: inst.path[1], value: inst.val.ang })

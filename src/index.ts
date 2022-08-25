@@ -101,7 +101,7 @@ module.exports = function (app) {
 
       app.handleMessage(plugin.id, updObj)
 
-      // app.debug(derivatives)
+      app.debug(derivatives.polarTgt)
     }
 
     setInterval(doNavCalcs, 1000)
