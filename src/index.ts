@@ -100,8 +100,6 @@ module.exports = function (app) {
       const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, navState)
 
       app.handleMessage(plugin.id, updObj)
-
-      app.debug(derivatives.polarTgt)
     }
 
     setInterval(doNavCalcs, 1000)

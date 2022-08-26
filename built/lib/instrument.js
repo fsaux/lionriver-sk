@@ -30,26 +30,28 @@ var Instrument = /** @class */ (function () {
             return this.avgVal;
         },
         set: function (newval) {
-            if (newval.value) {
-                this.lastUpdate = Date.parse(newval.timestamp);
-                if (this.expired) {
-                    this.valList = [];
-                    this.expired = false;
-                }
-                this.valList.push(newval.value);
-                if (this.valList.length > this.window) {
-                    this.valList.shift();
-                }
-                this.avgVal = this.calcAvg();
-            }
-            else {
-                var deltaT = Date.now() - this.lastUpdate;
-                if (deltaT > this.timeout * 1000) {
-                    if (this.avgVal == null) {
-                        this.expired = true;
+            if (newval) {
+                if (newval.value) {
+                    this.lastUpdate = Date.parse(newval.timestamp);
+                    if (this.expired) {
+                        this.valList = [];
+                        this.expired = false;
                     }
-                    else {
-                        this.avgVal = null;
+                    this.valList.push(newval.value);
+                    if (this.valList.length > this.window) {
+                        this.valList.shift();
+                    }
+                    this.avgVal = this.calcAvg();
+                }
+                else {
+                    var deltaT = Date.now() - this.lastUpdate;
+                    if (deltaT > this.timeout * 1000) {
+                        if (this.avgVal == null) {
+                            this.expired = true;
+                        }
+                        else {
+                            this.avgVal = null;
+                        }
                     }
                 }
             }
@@ -96,28 +98,30 @@ var VectorInstrument = /** @class */ (function (_super) {
             return this.avgVal;
         },
         set: function (newval) {
-            if (newval.mod.value && newval.ang.value) {
-                var lu1 = Date.parse(newval.mod.timestamp);
-                var lu2 = Date.parse(newval.ang.timestamp);
-                this.lastUpdate = lu1 < lu2 ? lu1 : lu2;
-                if (this.expired) {
-                    this.valList = [];
-                    this.expired = false;
-                }
-                this.valList.push({ mod: newval.mod.value, ang: newval.ang.value });
-                if (this.valList.length > this.window) {
-                    this.valList.shift();
-                }
-                this.avgVal = this.calcAvg();
-            }
-            else {
-                var deltaT = Date.now() - this.lastUpdate;
-                if (deltaT > this.timeout * 1000) {
-                    if (this.avgVal.mod == null && this.avgVal.ang == null) {
-                        this.expired = true;
+            if (newval.mod && newval.ang) {
+                if (newval.mod.value && newval.ang.value) {
+                    var lu1 = Date.parse(newval.mod.timestamp);
+                    var lu2 = Date.parse(newval.ang.timestamp);
+                    this.lastUpdate = lu1 < lu2 ? lu1 : lu2;
+                    if (this.expired) {
+                        this.valList = [];
+                        this.expired = false;
                     }
-                    else {
-                        this.avgVal = { mod: null, ang: null };
+                    this.valList.push({ mod: newval.mod.value, ang: newval.ang.value });
+                    if (this.valList.length > this.window) {
+                        this.valList.shift();
+                    }
+                    this.avgVal = this.calcAvg();
+                }
+                else {
+                    var deltaT = Date.now() - this.lastUpdate;
+                    if (deltaT > this.timeout * 1000) {
+                        if (this.avgVal.mod == null && this.avgVal.ang == null) {
+                            this.expired = true;
+                        }
+                        else {
+                            this.avgVal = { mod: null, ang: null };
+                        }
                     }
                 }
             }

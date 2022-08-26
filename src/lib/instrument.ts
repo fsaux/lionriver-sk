@@ -22,19 +22,21 @@ export abstract class Instrument<T> {
   }
 
   set val (newval: any) {
-    if (newval.value) {
-      this.lastUpdate = Date.parse(newval.timestamp)
-      if (this.expired) {
-        this.valList = []
-        this.expired = false
-      }
-      this.valList.push(newval.value)
-      if (this.valList.length > this.window) { this.valList.shift() }
-      this.avgVal = this.calcAvg()
-    } else {
-      const deltaT = Date.now() - this.lastUpdate
-      if (deltaT > this.timeout * 1000) {
-        if (this.avgVal == null) { this.expired = true } else { this.avgVal = null }
+    if (newval) {
+      if (newval.value) {
+        this.lastUpdate = Date.parse(newval.timestamp)
+        if (this.expired) {
+          this.valList = []
+          this.expired = false
+        }
+        this.valList.push(newval.value)
+        if (this.valList.length > this.window) { this.valList.shift() }
+        this.avgVal = this.calcAvg()
+      } else {
+        const deltaT = Date.now() - this.lastUpdate
+        if (deltaT > this.timeout * 1000) {
+          if (this.avgVal == null) { this.expired = true } else { this.avgVal = null }
+        }
       }
     }
   }
@@ -72,22 +74,24 @@ export class VectorInstrument extends Instrument<Vector> {
   }
 
   set val (newval: any) {
-    if (newval.mod.value && newval.ang.value) {
-      const lu1 = Date.parse(newval.mod.timestamp)
-      const lu2 = Date.parse(newval.ang.timestamp)
-      this.lastUpdate = lu1 < lu2 ? lu1 : lu2
-      if (this.expired) {
-        this.valList = []
-        this.expired = false
-      }
-      this.valList.push({ mod: newval.mod.value, ang: newval.ang.value })
-      if (this.valList.length > this.window) { this.valList.shift() }
-      this.avgVal = this.calcAvg()
-    } else {
-      const deltaT = Date.now() - this.lastUpdate
-      if (deltaT > this.timeout * 1000) {
-        if (this.avgVal.mod == null && this.avgVal.ang == null) { this.expired = true } else {
-          this.avgVal = { mod: null, ang: null }
+    if (newval.mod && newval.ang) {
+      if (newval.mod.value && newval.ang.value) {
+        const lu1 = Date.parse(newval.mod.timestamp)
+        const lu2 = Date.parse(newval.ang.timestamp)
+        this.lastUpdate = lu1 < lu2 ? lu1 : lu2
+        if (this.expired) {
+          this.valList = []
+          this.expired = false
+        }
+        this.valList.push({ mod: newval.mod.value, ang: newval.ang.value })
+        if (this.valList.length > this.window) { this.valList.shift() }
+        this.avgVal = this.calcAvg()
+      } else {
+        const deltaT = Date.now() - this.lastUpdate
+        if (deltaT > this.timeout * 1000) {
+          if (this.avgVal.mod == null && this.avgVal.ang == null) { this.expired = true } else {
+            this.avgVal = { mod: null, ang: null }
+          }
         }
       }
     }

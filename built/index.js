@@ -64,7 +64,6 @@ module.exports = function (app) {
         function doNavCalcs() {
             var updObj = (0, nav_1.navCalc)(app, primitives, derivatives, leewayTable, polarTable, navState);
             app.handleMessage(plugin.id, updObj);
-            app.debug(derivatives.polarTgt);
         }
         setInterval(doNavCalcs, 1000);
     };

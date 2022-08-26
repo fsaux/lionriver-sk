@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import * as geolib from 'geolib'
 import * as geoutils from 'geolocation-utils'
-import { Instrument, VectorInstrument } from './instrument'
+import { Instrument, PositionInstrument, VectorInstrument } from './instrument'
 import { Leeway } from './leeway'
 import { Polar, PolarPoint } from './polar'
 
@@ -28,6 +28,8 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
         ang: app.getSelfPath(inst.path[1])
       }
     } else {
+      const xx = app.getSelfPath(inst.path[0])
+      app.debug(xx)
       inst.val = app.getSelfPath(inst.path[0])
     }
   })

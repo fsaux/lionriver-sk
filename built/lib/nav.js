@@ -23,6 +23,8 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             };
         }
         else {
+            var xx = app.getSelfPath(inst.path[0]);
+            app.debug(xx);
             inst.val = app.getSelfPath(inst.path[0]);
         }
     });
