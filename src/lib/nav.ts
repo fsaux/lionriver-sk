@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-unused-vars */
+import { match } from 'assert'
 import * as geolib from 'geolib'
 import * as geoutils from 'geolocation-utils'
-import { Instrument, PositionInstrument, VectorInstrument } from './instrument'
+import { pid } from 'process'
+import { AngularInstrument, Instrument, PositionInstrument, VectorInstrument } from './instrument'
 import { Leeway } from './leeway'
 import { Polar, PolarPoint } from './polar'
 
@@ -28,8 +30,6 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
         ang: app.getSelfPath(inst.path[1])
       }
     } else {
-      const xx = app.getSelfPath(inst.path[0])
-      app.debug(xx)
       inst.val = app.getSelfPath(inst.path[0])
     }
   })
@@ -159,25 +159,31 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     const pb:PolarPoint = polarTable.getBeatTarget(tws * 3600 / 1852)
     const pr:PolarPoint = polarTable.getRunTarget(tws * 3600 / 1852)
 
-    if (angle <= (pb.twa + 15)) {
+    if (angle <= (pb.twa + 10)) {
       // Targets are relative to boat instruments (corrected for leeway)
-      tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy)
-      tgttwa = pr.twa * Math.PI / 180 - lwy
-      const z = (pr.spd * 1852 / 3600 * Math.cos(pr.twa * Math.PI / 180))
+      tgtspd = pb.spd * 1852 / 3600 * Math.cos(lwy)
+      tgttwa = pb.twa * Math.PI / 180 - lwy
+      const z = (pb.spd * 1852 / 3600 * Math.cos(pb.twa * Math.PI / 180))
       if (z != 0) { perf = vmg / z }
+
+      app.debug({ vmg, z })
+
       navState.sMode = sailingMode.beating
     }
 
-    if (angle < (pr.twa - 30) && angle > (pb.twa + 15)) {
+    if (angle < (pr.twa - 5) && angle > (pb.twa + 10)) {
       // Targets are relative to boat instruments (corrected for leeway)
-      const tspd = polarTable.getTarget((twa + lwy) * 180 / Math.PI, tws * 3600 / 1852) * 1852 / 3600
+      const tspd = polarTable.getTarget(angle, tws * 3600 / 1852) * 1852 / 3600
       tgtspd = tspd * Math.cos(lwy)
-      tgttwa = twa
-      if (tspd != 0) { perf = spd / Math.cos(lwy) / tspd }
+      tgttwa = angle * Math.PI / 180 - lwy
+      if (tspd != 0) { perf = spd * Math.cos(hdg - brg) / tspd }
+
+      app.debug({ vmgwpt: spd * Math.cos(hdg - brg), deltaA: (hdg - brg) * 180 / Math.PI, tspd })
+
       navState.sMode = sailingMode.reaching
     }
 
-    if (angle >= (pr.twa - 30)) {
+    if (angle >= (pr.twa - 5)) {
       // Targets are relative to boat instruments (corrected for leeway)
       tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy)
       tgttwa = pr.twa * Math.PI / 180 - lwy
@@ -185,6 +191,8 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       if (z != 0) { perf = vmg / z }
       navState.sMode = sailingMode.running
     }
+
+    app.debug({ angle })
 
     let ttwa = null
 
@@ -266,6 +274,15 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
         values.push({ path: inst.path[0], value: inst.val })
       }
     }
+  })
+
+  app.debug({
+    tgttwa: tgttwa * 180 / Math.PI,
+    twa: twa * 180 / Math.PI,
+    tgtspd: tgtspd * 3600 / 1852,
+    spd: spd * 3600 / 1852,
+    perf,
+    navstate: navState.sMode
   })
 
   return { updates: [{ values }] }

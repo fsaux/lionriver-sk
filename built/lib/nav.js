@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.navCalc = exports.sailingMode = void 0;
-/* eslint-disable camelcase */
-/* eslint-disable no-unused-vars */
 var geolib = require("geolib");
 var instrument_1 = require("./instrument");
 var sailingMode;
@@ -23,8 +21,6 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             };
         }
         else {
-            var xx = app.getSelfPath(inst.path[0]);
-            app.debug(xx);
             inst.val = app.getSelfPath(inst.path[0]);
         }
     });
@@ -147,27 +143,29 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             angle = 360 - angle;
         var pb = polarTable.getBeatTarget(tws * 3600 / 1852);
         var pr = polarTable.getRunTarget(tws * 3600 / 1852);
-        if (angle <= (pb.twa + 15)) {
+        if (angle <= (pb.twa - 0)) {
             // Targets are relative to boat instruments (corrected for leeway)
-            tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
-            tgttwa = pr.twa * Math.PI / 180 - lwy;
-            var z = (pr.spd * 1852 / 3600 * Math.cos(pr.twa * Math.PI / 180));
+            tgtspd = pb.spd * 1852 / 3600 * Math.cos(lwy);
+            tgttwa = pb.twa * Math.PI / 180 - lwy;
+            var z = (pb.spd * 1852 / 3600 * Math.cos(pb.twa * Math.PI / 180));
             if (z != 0) {
                 perf = vmg / z;
             }
+            app.debug({ vmg: vmg, z: z });
             navState.sMode = sailingMode.beating;
         }
-        if (angle < (pr.twa - 30) && angle > (pb.twa + 15)) {
+        if (angle < (pr.twa + 0) && angle > (pb.twa - 0)) {
             // Targets are relative to boat instruments (corrected for leeway)
-            var tspd = polarTable.getTarget((twa + lwy) * 180 / Math.PI, tws * 3600 / 1852) * 1852 / 3600;
+            var tspd = polarTable.getTarget(angle, tws * 3600 / 1852) * 1852 / 3600;
             tgtspd = tspd * Math.cos(lwy);
-            tgttwa = twa;
+            tgttwa = angle * Math.PI / 180 - lwy;
             if (tspd != 0) {
-                perf = spd / Math.cos(lwy) / tspd;
+                perf = spd * Math.cos(hdg - brg) / tspd;
             }
+            app.debug({ vmgwpt: spd * Math.cos(hdg - brg), deltaA: (hdg - brg) * 180 / Math.PI, tspd: tspd });
             navState.sMode = sailingMode.reaching;
         }
-        if (angle >= (pr.twa - 30)) {
+        if (angle >= (pr.twa + 0)) {
             // Targets are relative to boat instruments (corrected for leeway)
             tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
             tgttwa = pr.twa * Math.PI / 180 - lwy;
@@ -177,6 +175,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             }
             navState.sMode = sailingMode.running;
         }
+        app.debug({ angle: angle });
         var ttwa = null;
         if (angle <= (pb.twa + 50))
             ttwa = pb.twa * Math.PI / 180;
@@ -251,6 +250,14 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
                 values.push({ path: inst.path[0], value: inst.val });
             }
         }
+    });
+    app.debug({
+        tgttwa: tgttwa * 180 / Math.PI,
+        twa: twa * 180 / Math.PI,
+        tgtspd: tgtspd * 3600 / 1852,
+        spd: spd * 3600 / 1852,
+        perf: perf,
+        navstate: navState.sMode
     });
     return { updates: [{ values: values }] };
 }
