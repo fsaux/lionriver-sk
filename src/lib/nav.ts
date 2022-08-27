@@ -165,9 +165,6 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       tgttwa = pb.twa * Math.PI / 180 - lwy
       const z = (pb.spd * 1852 / 3600 * Math.cos(pb.twa * Math.PI / 180))
       if (z != 0) { perf = vmg / z }
-
-      app.debug({ vmg, z })
-
       navState.sMode = sailingMode.beating
     }
 
@@ -177,9 +174,6 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       tgtspd = tspd * Math.cos(lwy)
       tgttwa = angle * Math.PI / 180 - lwy
       if (tspd != 0) { perf = spd * Math.cos(hdg - brg) / tspd }
-
-      app.debug({ vmgwpt: spd * Math.cos(hdg - brg), deltaA: (hdg - brg) * 180 / Math.PI, tspd })
-
       navState.sMode = sailingMode.reaching
     }
 
@@ -191,8 +185,6 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       if (z != 0) { perf = vmg / z }
       navState.sMode = sailingMode.running
     }
-
-    app.debug({ angle })
 
     let ttwa = null
 
@@ -274,15 +266,6 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
         values.push({ path: inst.path[0], value: inst.val })
       }
     }
-  })
-
-  app.debug({
-    tgttwa: tgttwa * 180 / Math.PI,
-    twa: twa * 180 / Math.PI,
-    tgtspd: tgtspd * 3600 / 1852,
-    spd: spd * 3600 / 1852,
-    perf,
-    navstate: navState.sMode
   })
 
   return { updates: [{ values }] }
