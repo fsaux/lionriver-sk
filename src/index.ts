@@ -56,13 +56,13 @@ module.exports = function (app) {
     bearingToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.bearingTrue', 1),
     distanceToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.distance', 1),
     crossTrackError: new LinearInstrument('navigation.courseGreatCircle.crossTrackError', 1),
-    vmgToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood', 3),
+    vmgToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood', 5),
     trueWind: new VectorInstrument(
       'environment.wind.speedTrue',
       'environment.wind.angleTrueWater', 3),
-    vmg: new LinearInstrument('performance.velocityMadeGood', 3),
-    twd: new LinearInstrument('environment.wind.directionTrue', 3),
-    leeway: new AngularInstrument('navigation.leewayAngle', 3),
+    vmg: new LinearInstrument('performance.velocityMadeGood', 5),
+    twd: new LinearInstrument('environment.wind.directionTrue', 5),
+    leeway: new AngularInstrument('navigation.leewayAngle', 5),
     drift: new VectorInstrument(
       'environment.current.drift',
       'environment.current.setTrue', 15),
