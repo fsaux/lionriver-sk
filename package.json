@@ -1,6 +1,6 @@
 {
   "name": "@fsaux/lionriver-sk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lionriver navigator plugin",
   "main": "./built/index.js",
   "keywords": [

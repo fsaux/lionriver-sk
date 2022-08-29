@@ -143,7 +143,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             angle = 360 - angle;
         var pb = polarTable.getBeatTarget(tws * 3600 / 1852);
         var pr = polarTable.getRunTarget(tws * 3600 / 1852);
-        if (angle <= (pb.twa - 0)) {
+        if (angle <= (pb.twa + 10)) {
             // Targets are relative to boat instruments (corrected for leeway)
             tgtspd = pb.spd * 1852 / 3600 * Math.cos(lwy);
             tgttwa = pb.twa * Math.PI / 180 - lwy;
@@ -151,10 +151,9 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             if (z != 0) {
                 perf = vmg / z;
             }
-            app.debug({ vmg: vmg, z: z });
             navState.sMode = sailingMode.beating;
         }
-        if (angle < (pr.twa + 0) && angle > (pb.twa - 0)) {
+        if (angle < (pr.twa - 5) && angle > (pb.twa + 10)) {
             // Targets are relative to boat instruments (corrected for leeway)
             var tspd = polarTable.getTarget(angle, tws * 3600 / 1852) * 1852 / 3600;
             tgtspd = tspd * Math.cos(lwy);
@@ -162,10 +161,9 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             if (tspd != 0) {
                 perf = spd * Math.cos(hdg - brg) / tspd;
             }
-            app.debug({ vmgwpt: spd * Math.cos(hdg - brg), deltaA: (hdg - brg) * 180 / Math.PI, tspd: tspd });
             navState.sMode = sailingMode.reaching;
         }
-        if (angle >= (pr.twa + 0)) {
+        if (angle >= (pr.twa - 5)) {
             // Targets are relative to boat instruments (corrected for leeway)
             tgtspd = pr.spd * 1852 / 3600 * Math.cos(lwy);
             tgttwa = pr.twa * Math.PI / 180 - lwy;
@@ -175,7 +173,6 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             }
             navState.sMode = sailingMode.running;
         }
-        app.debug({ angle: angle });
         var ttwa = null;
         if (angle <= (pb.twa + 50))
             ttwa = pb.twa * Math.PI / 180;
@@ -250,14 +247,6 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
                 values.push({ path: inst.path[0], value: inst.val });
             }
         }
-    });
-    app.debug({
-        tgttwa: tgttwa * 180 / Math.PI,
-        twa: twa * 180 / Math.PI,
-        tgtspd: tgtspd * 3600 / 1852,
-        spd: spd * 3600 / 1852,
-        perf: perf,
-        navstate: navState.sMode
     });
     return { updates: [{ values: values }] };
 }
