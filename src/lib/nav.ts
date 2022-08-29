@@ -205,8 +205,8 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       const tgtcogs = Math.atan2(dyp, dxp) + twd
       const tgtsogs = Math.sqrt(dxp * dxp + dyp * dyp)
 
-      const alpha = (tgtcogp - brg + 2 * Math.PI) % (2 * Math.PI)
-      const beta = (brg - tgtcogs + 2 * Math.PI) % (2 * Math.PI)
+      const alpha = (tgtcogp - brg + 2 * Math.PI)
+      const beta = (brg - tgtcogs + 2 * Math.PI)
 
       if (alpha == 0) {
         dist_p = dst

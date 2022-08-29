@@ -188,8 +188,8 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             var dyp = tgtspd * Math.sin(-ttwa) + drift * Math.sin(relset);
             var tgtcogs = Math.atan2(dyp, dxp) + twd;
             var tgtsogs = Math.sqrt(dxp * dxp + dyp * dyp);
-            var alpha = (tgtcogp - brg + 2 * Math.PI) % (2 * Math.PI);
-            var beta = (brg - tgtcogs + 2 * Math.PI) % (2 * Math.PI);
+            var alpha = (tgtcogp - brg + 2 * Math.PI);
+            var beta = (brg - tgtcogs + 2 * Math.PI);
             if (alpha == 0) {
                 dist_p = dst;
                 dist_s = 0;

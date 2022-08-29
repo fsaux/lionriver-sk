@@ -33,7 +33,7 @@ exports.myLwyTab = [[0, 0, 0, 55],
     [170, 0.07, 0.93, 93],
     [180, 0, 0.9, 93]];
 var K1 = 0.00017; // Empiric from data analysis
-var MaxLeeway = 6; // Keep it below this max value
+var MaxLeeway = 6 * Math.PI / 180; // Keep it below this max value
 var Leeway = /** @class */ (function () {
     function Leeway(lwTable) {
         this.leewayPoints = [];
@@ -43,7 +43,11 @@ var Leeway = /** @class */ (function () {
     }
     Leeway.prototype.get = function (awa, aws, bspd) {
         var lwy = 0;
-        var idx = Math.round(awa * 180 / Math.PI);
+        var awnd = awa * 180 / Math.PI;
+        awnd = (awnd + 360) % 360;
+        if (awnd > 180)
+            awnd = 360 - awnd;
+        var idx = Math.round(awnd);
         if (idx === 180) {
             idx = 0;
         }

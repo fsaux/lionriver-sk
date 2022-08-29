@@ -37,7 +37,7 @@ export const myLwyTab = [[0, 0, 0, 55],
   [180, 0, 0.9, 93]]
 
 const K1 :number = 0.00017 // Empiric from data analysis
-const MaxLeeway :number = 6 // Keep it below this max value
+const MaxLeeway :number = 6 * Math.PI / 180 // Keep it below this max value
 
 export class Leeway {
   private leewayPoints: Array<LeewayPoint>
@@ -52,7 +52,11 @@ export class Leeway {
   get (awa:number, aws:number, bspd:number) {
     let lwy = 0
 
-    let idx = Math.round(awa * 180 / Math.PI)
+    let awnd = awa * 180 / Math.PI
+    awnd = (awnd + 360) % 360
+    if (awnd > 180) awnd = 360 - awnd
+
+    let idx = Math.round(awnd)
     if (idx === 180) { idx = 0 }
 
     const cd = this.leewayPoints[idx].Cdrag
