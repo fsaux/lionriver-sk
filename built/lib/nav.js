@@ -15,11 +15,6 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
         if (inst instanceof instrument_1.VectorInstrument) {
-            var xx = {
-                mod: app.getSelfPath(inst.path[0]),
-                ang: app.getSelfPath(inst.path[1])
-            };
-            app.debug(xx);
             inst.val = {
                 mod: app.getSelfPath(inst.path[0]),
                 ang: app.getSelfPath(inst.path[1])
