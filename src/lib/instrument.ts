@@ -23,7 +23,7 @@ export abstract class Instrument<T> {
 
   set val (newval: any) {
     if (newval) {
-      if (newval.value) {
+      if (newval.value !== null) {
         this.lastUpdate = Date.parse(newval.timestamp)
         if (this.expired) {
           this.valList = []
@@ -75,7 +75,7 @@ export class VectorInstrument extends Instrument<Vector> {
 
   set val (newval: any) {
     if (newval.mod && newval.ang) {
-      if (newval.mod.value && newval.ang.value) {
+      if (newval.mod.value !== null && newval.ang.value !== null) {
         const lu1 = Date.parse(newval.mod.timestamp)
         const lu2 = Date.parse(newval.ang.timestamp)
         this.lastUpdate = lu1 < lu2 ? lu1 : lu2

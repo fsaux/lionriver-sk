@@ -31,7 +31,7 @@ var Instrument = /** @class */ (function () {
         },
         set: function (newval) {
             if (newval) {
-                if (newval.value) {
+                if (newval.value !== null) {
                     this.lastUpdate = Date.parse(newval.timestamp);
                     if (this.expired) {
                         this.valList = [];
@@ -99,7 +99,7 @@ var VectorInstrument = /** @class */ (function (_super) {
         },
         set: function (newval) {
             if (newval.mod && newval.ang) {
-                if (newval.mod.value && newval.ang.value) {
+                if (newval.mod.value !== null && newval.ang.value !== null) {
                     var lu1 = Date.parse(newval.mod.timestamp);
                     var lu2 = Date.parse(newval.ang.timestamp);
                     this.lastUpdate = lu1 < lu2 ? lu1 : lu2;
