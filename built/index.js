@@ -46,7 +46,7 @@ module.exports = function (app) {
         laylineBearing: new LinearInstrument('navigation.racing.layline.bearingTrue', 5),
         opLaylineDst: new LinearInstrument('navigation.racing.oppositeLayline.distance', 5),
         opLaylineTime: new LinearInstrument('navigation.racing.oppositeLayline.time', 5),
-        opLaylineBearing: new LinearInstrument('navigation.racing.oppositelayline.bearingTrue', 5)
+        opLaylineBearing: new LinearInstrument('navigation.racing.oppositeLayline.bearingTrue', 5)
     };
     var leewayTable;
     var polarTable;
