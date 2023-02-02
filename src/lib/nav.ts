@@ -81,7 +81,11 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   if (primitives.vectorOverWater.val) {
     spd = primitives.vectorOverWater.val.mod
     hdg = primitives.vectorOverWater.val.ang
+  } else {
+    spd = sog
+    hdg = cog
   }
+
   if (primitives.appWind.val) {
     aws = primitives.appWind.val.mod
     awa = primitives.appWind.val.ang
