@@ -44,7 +44,7 @@ module.exports = function (app) {
       'environment.wind.angleApparent', 3),
     vectorOverGround: new VectorInstrument(
       'navigation.speedOverGround',
-      'navigation.courseOverGroundTrue', 3),
+      'navigation.courseOverGroundTrue', 5),
     vectorOverWater: new VectorInstrument(
       'navigation.speedThroughWater',
       'navigation.headingTrue', 3),
