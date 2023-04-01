@@ -58,7 +58,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     brg = geolib.getGreatCircleBearing(primitives.position.val, primitives.nextWptPos.val) * Math.PI / 180
     if (primitives.prevWptPos.val) {
       legbrg = geolib.getGreatCircleBearing(primitives.prevWptPos.val, primitives.nextWptPos.val) * Math.PI / 180
-      xte = Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000
+      xte = Math.asin(Math.sin(dst / 6371000) * Math.sin(brg - legbrg)) * 6371000 * Math.sign(brg - legbrg)
     }
     if (sog && cog) { vmgwpt = sog * Math.cos(cog - brg) }
   }
