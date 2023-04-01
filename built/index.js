@@ -24,7 +24,7 @@ module.exports = function (app) {
         nextWptPos: new PositionInstrument('navigation.courseGreatCircle.nextPoint.position', 1),
         prevWptPos: new PositionInstrument('navigation.courseGreatCircle.previousPoint.position', 1),
         appWind: new VectorInstrument('environment.wind.speedApparent', 'environment.wind.angleApparent', 3),
-        vectorOverGround: new VectorInstrument('navigation.speedOverGround', 'navigation.courseOverGroundTrue', 3),
+        vectorOverGround: new VectorInstrument('navigation.speedOverGround', 'navigation.courseOverGroundTrue', 5),
         vectorOverWater: new VectorInstrument('navigation.speedThroughWater', 'navigation.headingTrue', 3),
         dpt: new LinearInstrument('environment.depth.belowSurface', 1),
         temp: new LinearInstrument('environment.water.temperature', 1)
