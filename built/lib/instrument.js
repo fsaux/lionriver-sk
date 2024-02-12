@@ -153,7 +153,14 @@ var VectorInstrument = /** @class */ (function (_super) {
     VectorInstrument.prototype.calcAvg = function () {
         var x = this.valList.reduce(function (a, b) { return a + b.mod * Math.cos(b.ang); }, 0);
         var y = this.valList.reduce(function (a, b) { return a + b.mod * Math.sin(b.ang); }, 0);
-        return { mod: Math.sqrt(x * x + y * y) / this.valList.length, ang: Math.atan2(y, x) };
+        var m = Math.sqrt(x * x + y * y) / this.valList.length;
+        if (x == 0 && y == 0) {
+            x = this.valList.reduce(function (a, b) { return a + Math.cos(b.ang); }, 0);
+            y = this.valList.reduce(function (a, b) { return a + Math.sin(b.ang); }, 0);
+            m = 0;
+        }
+        var a = Math.atan2(y, x);
+        return { mod: m, ang: a };
     };
     return VectorInstrument;
 }(Instrument));

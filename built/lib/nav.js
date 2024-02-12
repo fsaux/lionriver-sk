@@ -30,7 +30,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     } // Default to 10m for ORC VPP
     var mvar = app.getSelfPath('navigation.magneticVariation').value;
     if (!mvar) {
-        mvar = options.mVariation;
+        mvar = options.mVariation * Math.PI / 180;
     }
     // Calculate derivatives
     var currentTime = new Date(Date.now()).toISOString();
@@ -77,6 +77,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
         spd = primitives.vectorOverWater.val.mod;
         hdt = primitives.vectorOverWater.val.ang + mvar;
     }
+    app.debug(primitives.vectorOverWater);
     if (primitives.appWind.val) {
         aws = primitives.appWind.val.mod;
         awa = primitives.appWind.val.ang;

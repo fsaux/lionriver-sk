@@ -38,7 +38,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   if (!windSensorHeight) { windSensorHeight = 10 } // Default to 10m for ORC VPP
 
   let mvar = app.getSelfPath('navigation.magneticVariation').value
-  if (!mvar) { mvar = options.mVariation }
+  if (!mvar) { mvar = options.mVariation * Math.PI / 180 }
 
   // Calculate derivatives
   const currentTime:string = new Date(Date.now()).toISOString()
