@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { navCalc, sailingMode, NavState } from './lib/nav'
-const { LinearInstrument, AngularInstrument, VectorInstrument, PositionInstrument } = require('./lib/instrument')
+const { LinearInstrument, AngularInstrument, VectorInstrument,
+   PositionInstrument, AttitudeInstrument } = require('./lib/instrument')
 const { Leeway, myLwyTab } = require('./lib/leeway')
 const { Polar, PolarPoint } = require('./lib/polar')
 const path = require('path')
@@ -47,9 +48,10 @@ module.exports = function (app) {
       'navigation.courseOverGroundTrue', 5),
     vectorOverWater: new VectorInstrument(
       'navigation.speedThroughWater',
-      'navigation.headingTrue', 3),
+      'navigation.headingMagnetic', 3),
     dpt: new LinearInstrument('environment.depth.belowSurface', 1),
-    temp: new LinearInstrument('environment.water.temperature', 1)
+    temp: new LinearInstrument('environment.water.temperature', 1),
+    attitude: new AttitudeInstrument('navigation.attitude', 3)    
   }
 
   const derivatives = {
@@ -97,7 +99,7 @@ module.exports = function (app) {
     Object.values(derivatives).forEach((inst) => { inst.timeout = options.dataTimeout })
 
     function doNavCalcs () {
-      const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, navState)
+      const updObj = navCalc(app, primitives, derivatives, leewayTable, polarTable, navState, options)
 
       app.handleMessage(plugin.id, updObj)
     }
@@ -124,6 +126,16 @@ module.exports = function (app) {
         title: 'Polar file',
         type: 'string',
         default: ''
+      },
+      lwyKfactor: {
+        title: 'Leeway K constant (9-16) 9~Racer',
+        type: 'number',
+        default: 16
+      },
+      mVariation: {
+        title: 'Magnetic Variation +E/-W',
+        type: 'number',
+        default: 0
       }
     }
   }

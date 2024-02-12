@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PositionInstrument = exports.VectorInstrument = exports.AngularInstrument = exports.LinearInstrument = exports.Instrument = void 0;
+exports.PositionInstrument = exports.VectorInstrument = exports.AttitudeInstrument = exports.AngularInstrument = exports.LinearInstrument = exports.Instrument = void 0;
 var Instrument = /** @class */ (function () {
     function Instrument(path, window) {
         this.path = [path];
@@ -86,6 +86,27 @@ var AngularInstrument = /** @class */ (function (_super) {
     return AngularInstrument;
 }(Instrument));
 exports.AngularInstrument = AngularInstrument;
+var AttitudeInstrument = /** @class */ (function (_super) {
+    __extends(AttitudeInstrument, _super);
+    function AttitudeInstrument() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    AttitudeInstrument.prototype.calcAvg = function () {
+        var x_yaw = this.valList.reduce(function (a, b) { return a + Math.cos(b.yaw); }, 0);
+        var y_yaw = this.valList.reduce(function (a, b) { return a + Math.sin(b.yaw); }, 0);
+        var x_pitch = this.valList.reduce(function (a, b) { return a + Math.cos(b.pitch); }, 0);
+        var y_pitch = this.valList.reduce(function (a, b) { return a + Math.sin(b.pitch); }, 0);
+        var x_roll = this.valList.reduce(function (a, b) { return a + Math.cos(b.roll); }, 0);
+        var y_roll = this.valList.reduce(function (a, b) { return a + Math.sin(b.roll); }, 0);
+        return {
+            yaw: Math.atan2(y_yaw, x_yaw),
+            pitch: Math.atan2(y_pitch, x_pitch),
+            roll: Math.atan2(y_roll, x_roll)
+        };
+    };
+    return AttitudeInstrument;
+}(Instrument));
+exports.AttitudeInstrument = AttitudeInstrument;
 var VectorInstrument = /** @class */ (function (_super) {
     __extends(VectorInstrument, _super);
     function VectorInstrument(mpath, apath, window) {

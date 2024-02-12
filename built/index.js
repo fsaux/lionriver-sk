@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable no-unused-vars */
 var nav_1 = require("./lib/nav");
-var _a = require('./lib/instrument'), LinearInstrument = _a.LinearInstrument, AngularInstrument = _a.AngularInstrument, VectorInstrument = _a.VectorInstrument, PositionInstrument = _a.PositionInstrument;
+var _a = require('./lib/instrument'), LinearInstrument = _a.LinearInstrument, AngularInstrument = _a.AngularInstrument, VectorInstrument = _a.VectorInstrument, PositionInstrument = _a.PositionInstrument, AttitudeInstrument = _a.AttitudeInstrument;
 var _b = require('./lib/leeway'), Leeway = _b.Leeway, myLwyTab = _b.myLwyTab;
 var _c = require('./lib/polar'), Polar = _c.Polar, PolarPoint = _c.PolarPoint;
 var path = require('path');
@@ -25,9 +25,10 @@ module.exports = function (app) {
         prevWptPos: new PositionInstrument('navigation.courseGreatCircle.previousPoint.position', 1),
         appWind: new VectorInstrument('environment.wind.speedApparent', 'environment.wind.angleApparent', 3),
         vectorOverGround: new VectorInstrument('navigation.speedOverGround', 'navigation.courseOverGroundTrue', 5),
-        vectorOverWater: new VectorInstrument('navigation.speedThroughWater', 'navigation.headingTrue', 3),
+        vectorOverWater: new VectorInstrument('navigation.speedThroughWater', 'navigation.headingMagnetic', 3),
         dpt: new LinearInstrument('environment.depth.belowSurface', 1),
-        temp: new LinearInstrument('environment.water.temperature', 1)
+        temp: new LinearInstrument('environment.water.temperature', 1),
+        attitude: new AttitudeInstrument('navigation.attitude', 3)
     };
     var derivatives = {
         bearingToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.bearingTrue', 1),
@@ -62,7 +63,7 @@ module.exports = function (app) {
         Object.values(primitives).forEach(function (inst) { inst.timeout = options.dataTimeout; });
         Object.values(derivatives).forEach(function (inst) { inst.timeout = options.dataTimeout; });
         function doNavCalcs() {
-            var updObj = (0, nav_1.navCalc)(app, primitives, derivatives, leewayTable, polarTable, navState);
+            var updObj = (0, nav_1.navCalc)(app, primitives, derivatives, leewayTable, polarTable, navState, options);
             app.handleMessage(plugin.id, updObj);
         }
         setInterval(doNavCalcs, 1000);
@@ -85,6 +86,16 @@ module.exports = function (app) {
                 title: 'Polar file',
                 type: 'string',
                 default: ''
+            },
+            lwyKfactor: {
+                title: 'Leeway K constant (9-16) 9~Racer',
+                type: 'number',
+                default: 16
+            },
+            mVariation: {
+                title: 'Magnetic Variation +E/-W',
+                type: 'number',
+                default: 0
             }
         }
     };

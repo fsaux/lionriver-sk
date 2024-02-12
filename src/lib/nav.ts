@@ -20,7 +20,7 @@ export interface NavState {
 }
 
 export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
-  polarTable: Polar, navState: NavState): Object {
+  polarTable: Polar, navState: NavState, options: any): Object {
   //
   // Get primitives
   Object.values(primitives).forEach((inst:Instrument<any>) => {
@@ -34,8 +34,11 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     }
   })
 
-  let windSensorHeight = app.getSelfPath('design.airHeight')
+  let windSensorHeight = app.getSelfPath('design.airHeight').value
   if (!windSensorHeight) { windSensorHeight = 10 } // Default to 10m for ORC VPP
+
+  let mvar = app.getSelfPath('navigation.magneticVariation').value
+  if (!mvar) { mvar = options.mVariation }
 
   // Calculate derivatives
   const currentTime:string = new Date(Date.now()).toISOString()
@@ -73,7 +76,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   derivatives.vmgToWpt.val = { value: vmgwpt, timestamp: currentTime }
 
   let spd = null
-  let hdg = null
+  let hdt = null
   let aws = null
   let awa = null
   let twa = null
@@ -84,7 +87,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
 
   if (primitives.vectorOverWater.val) {
     spd = primitives.vectorOverWater.val.mod
-    hdg = primitives.vectorOverWater.val.ang
+    hdt = primitives.vectorOverWater.val.ang + mvar
   }
 
   if (primitives.appWind.val) {
@@ -93,7 +96,16 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   }
 
   if (awa && aws && spd) {
-    lwy = leewayTable.get(awa, aws, spd)
+    if (primitives.heel)
+    {
+      const speedKnts = spd * 3600 / 1852
+      if (speedKnts !=0)
+        lwy = options.lwyKfactor * primitives.attitude.val.heel / ( speedKnts * speedKnts )
+      else
+        lwy = 0
+    }
+    else
+      lwy = leewayTable.get(awa, aws, spd)
 
     if (awa > Math.PI) { lwy = -lwy }
     const x = aws * Math.cos(awa) - spd
@@ -107,8 +119,8 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
     if (Math.abs(twa) > 130 * Math.PI / 180) { navState.sMode = sailingMode.running } else { navState.sMode = sailingMode.reaching }
 
     vmg = spd * Math.cos(twa)
-    if (hdg) {
-      twd = twa + hdg
+    if (hdt) {
+      twd = twa + hdt
     }
   }
 
@@ -123,13 +135,13 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   let drift = null
   let set = null
 
-  if (cog && sog && hdg && spd) {
-    let dx = sog * Math.cos(cog) - spd * Math.cos(hdg)
-    let dy = sog * Math.sin(cog) - spd * Math.sin(hdg)
+  if (cog && sog && hdt && spd) {
+    let dx = sog * Math.cos(cog) - spd * Math.cos(hdt)
+    let dy = sog * Math.sin(cog) - spd * Math.sin(hdt)
 
     if (lwy) {
       const lm = spd * Math.tan(lwy)
-      const la = hdg - Math.PI
+      const la = hdt - Math.PI
       const lx = lm * Math.cos(la)
       const ly = lm * Math.sin(la)
       dx -= lx
@@ -178,7 +190,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
       const tspd = polarTable.getTarget(angle, tws * 3600 / 1852) * 1852 / 3600
       tgtspd = tspd * Math.cos(lwy)
       tgttwa = angle * Math.PI / 180 - lwy
-      if (tspd != 0) { perf = spd * Math.cos(hdg - brg) / tspd }
+      if (tspd != 0) { perf = spd * Math.cos(hdt - brg) / tspd }
       navState.sMode = sailingMode.reaching
     }
 

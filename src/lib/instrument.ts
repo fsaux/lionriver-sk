@@ -58,6 +58,30 @@ export class AngularInstrument extends Instrument<number> {
   }
 }
 
+interface Attitude{
+  yaw: number;
+  pitch: number;
+  roll: number;
+}
+
+export class  AttitudeInstrument extends Instrument<Attitude> {
+  calcAvg () {
+    const x_yaw = this.valList.reduce((a, b) => a + Math.cos(b.yaw), 0)
+    const y_yaw = this.valList.reduce((a, b) => a + Math.sin(b.yaw), 0)
+    const x_pitch = this.valList.reduce((a, b) => a + Math.cos(b.pitch), 0)
+    const y_pitch = this.valList.reduce((a, b) => a + Math.sin(b.pitch), 0)
+    const x_roll = this.valList.reduce((a, b) => a + Math.cos(b.roll), 0)
+    const y_roll = this.valList.reduce((a, b) => a + Math.sin(b.roll), 0)
+
+    return {
+      yaw: Math.atan2(y_yaw, x_yaw),
+      pitch: Math.atan2(y_pitch, x_pitch),
+      roll: Math.atan2(y_roll, x_roll)
+    }
+
+  }
+}
+
 interface Vector{
     mod: number;
     ang: number;

@@ -10,7 +10,7 @@ var sailingMode;
     sailingMode[sailingMode["reaching"] = 2] = "reaching";
     sailingMode[sailingMode["running"] = 3] = "running";
 })(sailingMode = exports.sailingMode || (exports.sailingMode = {}));
-function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState) {
+function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState, options) {
     //
     // Get primitives
     Object.values(primitives).forEach(function (inst) {
@@ -24,10 +24,14 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             inst.val = app.getSelfPath(inst.path[0]);
         }
     });
-    var windSensorHeight = app.getSelfPath('design.airHeight');
+    var windSensorHeight = app.getSelfPath('design.airHeight').value;
     if (!windSensorHeight) {
         windSensorHeight = 10;
     } // Default to 10m for ORC VPP
+    var mvar = app.getSelfPath('navigation.magneticVariation').value;
+    if (!mvar) {
+        mvar = options.mVariation;
+    }
     // Calculate derivatives
     var currentTime = new Date(Date.now()).toISOString();
     var sog = null;
@@ -61,7 +65,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     derivatives.crossTrackError.val = { value: xte, timestamp: currentTime };
     derivatives.vmgToWpt.val = { value: vmgwpt, timestamp: currentTime };
     var spd = null;
-    var hdg = null;
+    var hdt = null;
     var aws = null;
     var awa = null;
     var twa = null;
@@ -71,14 +75,22 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     var lwy = null;
     if (primitives.vectorOverWater.val) {
         spd = primitives.vectorOverWater.val.mod;
-        hdg = primitives.vectorOverWater.val.ang;
+        hdt = primitives.vectorOverWater.val.ang + mvar;
     }
     if (primitives.appWind.val) {
         aws = primitives.appWind.val.mod;
         awa = primitives.appWind.val.ang;
     }
     if (awa && aws && spd) {
-        lwy = leewayTable.get(awa, aws, spd);
+        if (primitives.heel) {
+            var speedKnts = spd * 3600 / 1852;
+            if (speedKnts != 0)
+                lwy = options.lwyKfactor * primitives.attitude.val.heel / (speedKnts * speedKnts);
+            else
+                lwy = 0;
+        }
+        else
+            lwy = leewayTable.get(awa, aws, spd);
         if (awa > Math.PI) {
             lwy = -lwy;
         }
@@ -99,8 +111,8 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             navState.sMode = sailingMode.reaching;
         }
         vmg = spd * Math.cos(twa);
-        if (hdg) {
-            twd = twa + hdg;
+        if (hdt) {
+            twd = twa + hdt;
         }
     }
     derivatives.trueWind.val = {
@@ -112,12 +124,12 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     derivatives.leeway.val = { value: lwy, timestamp: currentTime };
     var drift = null;
     var set = null;
-    if (cog && sog && hdg && spd) {
-        var dx = sog * Math.cos(cog) - spd * Math.cos(hdg);
-        var dy = sog * Math.sin(cog) - spd * Math.sin(hdg);
+    if (cog && sog && hdt && spd) {
+        var dx = sog * Math.cos(cog) - spd * Math.cos(hdt);
+        var dy = sog * Math.sin(cog) - spd * Math.sin(hdt);
         if (lwy) {
             var lm = spd * Math.tan(lwy);
-            var la = hdg - Math.PI;
+            var la = hdt - Math.PI;
             var lx = lm * Math.cos(la);
             var ly = lm * Math.sin(la);
             dx -= lx;
@@ -163,7 +175,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
             tgtspd = tspd * Math.cos(lwy);
             tgttwa = angle * Math.PI / 180 - lwy;
             if (tspd != 0) {
-                perf = spd * Math.cos(hdg - brg) / tspd;
+                perf = spd * Math.cos(hdt - brg) / tspd;
             }
             navState.sMode = sailingMode.reaching;
         }
