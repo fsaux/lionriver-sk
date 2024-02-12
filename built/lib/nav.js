@@ -121,6 +121,7 @@ function navCalc(app, primitives, derivatives, leewayTable, polarTable, navState
     };
     derivatives.vmg.val = { value: vmg, timestamp: currentTime };
     derivatives.twd.val = { value: twd, timestamp: currentTime };
+    derivatives.hdt.val = { value: hdt, timestamp: currentTime };
     derivatives.leeway.val = { value: lwy, timestamp: currentTime };
     var drift = null;
     var set = null;

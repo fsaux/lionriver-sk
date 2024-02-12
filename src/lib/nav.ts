@@ -130,6 +130,7 @@ export function navCalc (app, primitives, derivatives, leewayTable: Leeway,
   }
   derivatives.vmg.val = { value: vmg, timestamp: currentTime }
   derivatives.twd.val = { value: twd, timestamp: currentTime }
+  derivatives.hdt.val = { value: hdt, timestamp: currentTime }
   derivatives.leeway.val = { value: lwy, timestamp: currentTime }
 
   let drift = null

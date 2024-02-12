@@ -55,7 +55,7 @@ module.exports = function (app) {
   }
 
   const derivatives = {
-    bearingToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.bearingTrue', 1),
+    bearingToWpt: new AngularInstrument('navigation.courseGreatCircle.nextPoint.bearingTrue', 1),
     distanceToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.distance', 1),
     crossTrackError: new LinearInstrument('navigation.courseGreatCircle.crossTrackError', 1),
     vmgToWpt: new LinearInstrument('navigation.courseGreatCircle.nextPoint.velocityMadeGood', 5),
@@ -63,7 +63,8 @@ module.exports = function (app) {
       'environment.wind.speedTrue',
       'environment.wind.angleTrueWater', 3),
     vmg: new LinearInstrument('performance.velocityMadeGood', 5),
-    twd: new LinearInstrument('environment.wind.directionTrue', 5),
+    twd: new AngularInstrument('environment.wind.directionTrue', 5),
+    hdt: new AngularInstrument('navigation.headingTrue',1),
     leeway: new AngularInstrument('navigation.leewayAngle', 5),
     drift: new VectorInstrument(
       'environment.current.drift',
@@ -74,10 +75,10 @@ module.exports = function (app) {
     perf: new LinearInstrument('performance.polarSpeedRatio', 5),
     laylineDst: new LinearInstrument('navigation.racing.layline.distance', 5),
     laylineTime: new LinearInstrument('navigation.racing.layline.time', 5),
-    laylineBearing: new LinearInstrument('navigation.racing.layline.bearingTrue', 5),
+    laylineBearing: new AngularInstrument('navigation.racing.layline.bearingTrue', 5),
     opLaylineDst: new LinearInstrument('navigation.racing.oppositeLayline.distance', 5),
     opLaylineTime: new LinearInstrument('navigation.racing.oppositeLayline.time', 5),
-    opLaylineBearing: new LinearInstrument('navigation.racing.oppositeLayline.bearingTrue', 5)
+    opLaylineBearing: new AngularInstrument('navigation.racing.oppositeLayline.bearingTrue', 5)
   }
 
   let leewayTable
